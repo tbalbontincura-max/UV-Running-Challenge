@@ -3,100 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UV Running - Pozo Real</title>
+    <title>UV Running - Master Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap');
-        body { background: linear-gradient(135deg, #e0f2fe 0%, #f0fdf4 100%); color: #1e293b; font-family: 'Inter', sans-serif; min-height: 100vh; }
-        .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -1px; }
-        .card-white { background: white; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
-        .btn-sport { background: #10b981; color: white; transition: all 0.2s; cursor: pointer; }
-        .btn-sport:disabled { background: #cbd5e1; cursor: not-allowed; }
+        body { background: #f8fafc; color: #1e293b; font-family: 'Inter', sans-serif; }
+        .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
+        .card { background: white; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .progress-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
     </style>
 </head>
-<body class="p-4 pb-12">
+<body class="p-4 max-w-lg mx-auto pb-20">
 
-    <div id="loginScreen" class="max-w-md mx-auto mt-10">
-        <div class="text-center mb-8">
-            <i class="fa-solid fa-person-running text-5xl text-emerald-500 mb-4"></i>
-            <h1 class="text-4xl font-sport bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-emerald-500 text-center">UV RUNNING</h1>
-            <p class="text-slate-400 font-bold text-[10px] tracking-widest mt-2 uppercase text-center italic">Selecciona tu perfil para entrar</p>
-        </div>
-        <div class="card-white p-6 shadow-xl">
-            <div class="grid grid-cols-1 gap-2 max-h-[50vh] overflow-y-auto pr-2" id="userPicker"></div>
+    <div id="loginScreen" class="mt-10 text-center">
+        <h1 class="text-4xl font-sport text-emerald-600 mb-8">UV RUNNING</h1>
+        <div class="card p-6">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Selecciona tu Perfil</p>
+            <div id="userPicker" class="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto"></div>
         </div>
     </div>
 
-    <div id="mainApp" class="hidden max-w-md mx-auto">
-        <header class="flex justify-between items-center py-4 px-2">
-            <span class="font-sport text-emerald-600 italic tracking-tighter text-sm italic underline decoration-emerald-300"> <i class="fa-solid fa-medal"></i> Dashboard Global</span>
-            <button onclick="location.reload()" class="text-[9px] font-black text-slate-400 uppercase bg-white px-3 py-1 rounded-full shadow-sm"> <i class="fa-solid fa-arrow-left"></i> Salir</button>
+    <div id="mainApp" class="hidden">
+        <header class="flex justify-between items-center py-4">
+            <span class="font-sport text-emerald-600 italic">Challenge 2026</span>
+            <button onclick="location.reload()" class="text-[10px] font-bold text-slate-400 uppercase">Salir</button>
         </header>
 
-        <div class="card-white p-8 mb-6 text-center border-b-8 border-emerald-500 relative">
-            <h2 class="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-[0.2em]">Pozo Acumulado</h2>
-            <div id="totalPozo" class="text-6xl font-sport text-slate-800">$0.00</div>
-            <p class="text-[9px] text-emerald-500 font-bold mt-2 uppercase tracking-widest">Sincronizado en tiempo real</p>
+        <div class="card p-5 mb-6">
+            <div class="flex justify-between text-[10px] font-bold text-slate-400 mb-2 uppercase">
+                <span>Inicio: 12 Ene</span>
+                <span>Asado: 13 Mar</span>
+            </div>
+            <div class="w-full bg-slate-100 h-4 rounded-full overflow-hidden flex items-center p-1">
+                <div id="progressBar" class="h-2 bg-emerald-500 rounded-full transition-all duration-1000 progress-glow" style="width: 0%"></div>
+            </div>
+            <p id="progressText" class="text-center text-[10px] font-bold text-emerald-600 mt-2 uppercase"></p>
         </div>
 
-        <div id="alertaPendiente" class="hidden bg-orange-100 border border-orange-200 text-orange-700 p-4 rounded-2xl mb-6 flex items-center gap-3">
-            <i class="fa-solid fa-clock-rotate-left text-xl"></i>
-            <div>
-                <p class="text-xs font-bold uppercase tracking-tight">Reporte Semanal</p>
-                <p class="text-[10px]" id="textoSemanaReportar"></p>
-            </div>
+        <div class="card p-6 mb-6 text-center border-b-4 border-emerald-500">
+            <h2 class="text-[10px] font-black text-slate-400 uppercase">Pozo Acumulado</h2>
+            <div id="totalPozo" class="text-5xl font-sport text-slate-800">$0.00</div>
         </div>
 
-        <div class="card-white p-6 mb-8">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="bg-blue-100 w-10 h-10 rounded-full flex items-center justify-center text-blue-600"><i class="fa-solid fa-user"></i></div>
-                <div>
-                    <h3 class="font-extrabold text-slate-800 leading-none" id="userNameDisplay"></h3>
-                    <p id="userMetaDisplay" class="text-[9px] font-black text-blue-500 uppercase mt-1"></p>
-                </div>
-            </div>
+        <div class="card p-6 mb-6">
+            <h3 class="font-bold text-slate-800 mb-4 flex justify-between">
+                <span>Hola, <span id="userNameDisplay"></span></span>
+                <span id="userMetaTag" class="text-[9px] bg-blue-100 text-blue-600 px-2 py-1 rounded"></span>
+            </h3>
             
-            <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 uppercase mb-3 text-center tracking-widest">¿Cuántas veces fallaste?</p>
-                <div class="flex gap-2">
-                    <input type="number" id="inputFallos" class="w-20 bg-white border-2 border-slate-100 rounded-xl p-2 text-center font-bold text-xl outline-none" value="0" min="0">
-                    <button id="btnReportar" onclick="enviarASupabase()" class="btn-sport flex-1 rounded-xl font-black text-xs uppercase shadow-sm">Confirmar</button>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-slate-400 uppercase">Semana a reportar/editar:</label>
+                    <select id="semanaSelector" class="w-full p-2 bg-slate-50 border rounded-lg text-sm font-bold mt-1" onchange="cargarReporteSemanal()"></select>
+                </div>
+                <div class="flex gap-4 items-end">
+                    <div class="flex-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase">Fallos:</label>
+                        <input type="number" id="inputFallos" class="w-full p-2 bg-white border rounded-lg font-bold text-center" value="0" min="0">
+                    </div>
+                    <button onclick="enviarReporte()" class="bg-emerald-500 text-white px-6 py-2.5 rounded-lg font-bold text-xs uppercase shadow-lg active:scale-95 transition">Guardar</button>
                 </div>
             </div>
         </div>
 
-        <div class="flex justify-between items-center mb-3 px-2">
-            <h3 class="font-sport text-slate-400 text-[10px] tracking-widest"> <i class="fa-solid fa-list-ol mr-1"></i> Aportes del Grupo</h3>
-            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Acumulado</span>
-        </div>
+        <h3 class="font-sport text-slate-400 text-[10px] mb-3 ml-2 uppercase">Estado de Participantes</h3>
         <div id="rankingList" class="space-y-2"></div>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN SUPABASE ---
-        // REEMPLAZA ESTO CON TUS DATOS DE SETTINGS > API
         const SUPABASE_URL = 'https://yibllgoulqowzewyusdh.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpYmxsZ291bHFvd3pld3l1c2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzODAxODksImV4cCI6MjA4Njk1NjE4OX0.JcDzcK_xDIBaXI_sZQGGvEl9-2x4BeuDMZQRV2DJWUs;
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const SUPABASE_KEY = 'sb_publishable_dYy4Q9ZjPa-015MFbmpNvg_Z_1lSwa6a8b16e4564c70d4f3b0656a9926861218868612';
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const metasMapping = { "Mati Adauy": 7, "Pablo Torné": 6, "Joaquín Leonart": 5, "Sami Arteaga": 5, "Pedro De la Barra": 5, "Seba Ábalos": 5, "Tomás Balbontín": 4, "Roque Santa Cruz": 4, "Rodrigo Ábalos": 4, "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4, "Seba Domeyko": 3, "Lucas Perez": 3, "Martín González": 3, "Martín Muñoz": 3, "Ignacio Eyzaguirre": 3, "Pablo Bas": 3, "Nacho Achondo": 3, "Tatan Ruiza": 3, "Toto Labán": 3 };
+        const participantes = { "Mati Adauy": 7, "Pablo Torné": 6, "Joaquín Leonart": 5, "Sami Arteaga": 5, "Pedro De la Barra": 5, "Seba Ábalos": 5, "Tomás Balbontín": 4, "Roque Santa Cruz": 4, "Rodrigo Ábalos": 4, "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4, "Seba Domeyko": 3, "Lucas Perez": 3, "Martín González": 3, "Martín Muñoz": 3, "Ignacio Eyzaguirre": 3, "Pablo Bas": 3, "Nacho Achondo": 3, "Tatan Ruiza": 3, "Toto Labán": 3 };
         
         let currentUser = null;
 
-        function getSemanaId() {
-            let d = new Date(); d.setDate(d.getDate() - (d.getDay() || 7) - 6);
-            return `sem-${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()}`;
+        function generarSemanas() {
+            const lista = [];
+            let fecha = new Date(2026, 0, 12); // 12 de enero 2026
+            const finChallenge = new Date(2026, 2, 8); // 8 de marzo 2026
+
+            while (fecha <= finChallenge) {
+                let inicio = new Date(fecha);
+                let fin = new Date(fecha);
+                fin.setDate(fin.getDate() + 6);
+                
+                const label = `${inicio.getDate()}/${inicio.getMonth()+1} - ${fin.getDate()}/${fin.getMonth()+1}`;
+                const id = `sem-${inicio.getDate()}-${inicio.getMonth()+1}`;
+                lista.push({ id, label, inicio: new Date(inicio) });
+                
+                fecha.setDate(fecha.getDate() + 7);
+            }
+            return lista;
+        }
+
+        function actualizarTimeline() {
+            const inicio = new Date(2026, 0, 12).getTime();
+            const asado = new Date(2026, 2, 13).getTime();
+            const hoy = new Date().getTime();
+            
+            const total = asado - inicio;
+            const transcurrido = hoy - inicio;
+            let porcentaje = (transcurrido / total) * 100;
+            porcentaje = Math.min(Math.max(porcentaje, 0), 100);
+
+            document.getElementById('progressBar').style.width = porcentaje + '%';
+            document.getElementById('progressText').innerText = `Vas al ${Math.round(porcentaje)}% del camino al asado`;
         }
 
         async function init() {
+            actualizarTimeline();
             const picker = document.getElementById('userPicker');
-            picker.innerHTML = Object.keys(metasMapping).map(n => `
-                <button onclick="login('${n}')" class="w-full text-left p-3 mb-2 bg-slate-50 hover:bg-emerald-50 rounded-xl font-bold text-sm border flex justify-between items-center">
-                    ${n} <span class="text-[10px] text-slate-400 uppercase italic">META: ${metasMapping[n]}</span>
-                </button>
+            picker.innerHTML = Object.keys(participantes).map(n => `
+                <button onclick="login('${n}')" class="w-full text-left p-3 bg-slate-50 hover:bg-emerald-50 rounded-xl font-bold text-sm border transition">${n}</button>
             `).join('');
+
+            const selector = document.getElementById('semanaSelector');
+            const semanas = generarSemanas();
+            selector.innerHTML = semanas.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+            // Por defecto seleccionar semana anterior
         }
 
         async function login(nombre) {
@@ -104,49 +132,84 @@
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('userNameDisplay').innerText = nombre;
-            document.getElementById('userMetaDisplay').innerText = `Tu objetivo: ${metasMapping[nombre]} entrenamientos`;
-            document.getElementById('textoSemanaReportar').innerText = `Es momento de reportar tus fallos de la semana pasada.`;
-            
-            verificarReporteExistente();
+            document.getElementById('userMetaTag').innerText = `Meta: ${participantes[nombre]}`;
+            cargarReporteSemanal();
             cargarDatosGlobales();
         }
 
-        async function verificarReporteExistente() {
-            const { data } = await supabaseClient.from('registros_asado').select('*').eq('nombre', currentUser).eq('semana_id', getSemanaId());
-            if (data && data.length > 0) {
-                document.getElementById('btnReportar').disabled = true;
-                document.getElementById('btnReportar').innerText = "REPORTADO ✓";
-                document.getElementById('alertaPendiente').classList.add('hidden');
+        async function cargarReporteSemanal() {
+            const semId = document.getElementById('semanaSelector').value;
+            const { data } = await client.from('registros_asado').select('deuda').eq('nombre', currentUser).eq('semana_id', semId).single();
+            
+            if (data) {
+                const meta = participantes[currentUser];
+                const fallosOriginales = (data.deuda * meta) / 30;
+                document.getElementById('inputFallos').value = Math.round(fallosOriginales);
             } else {
-                document.getElementById('alertaPendiente').classList.remove('hidden');
+                document.getElementById('inputFallos').value = 0;
             }
         }
 
-        async function enviarASupabase() {
+        async function enviarReporte() {
+            const semId = document.getElementById('semanaSelector').value;
             const fallos = parseInt(document.getElementById('inputFallos').value);
-            if (fallos > metasMapping[currentUser]) return alert("No puedes tener más fallos que tu meta.");
-            
-            const deuda = (30 / metasMapping[currentUser]) * fallos;
-            const { error } = await supabaseClient.from('registros_asado').insert([{ nombre: currentUser, deuda: deuda, semana_id: getSemanaId() }]);
+            const deuda = (30 / participantes[currentUser]) * fallos;
 
-            if (!error) { alert("¡Reporte guardado!"); location.reload(); }
-            else { alert("Error: " + error.message); }
+            // Upsert: si existe lo edita, si no, lo crea
+            const { error } = await client.from('registros_asado').upsert({ 
+                nombre: currentUser, 
+                semana_id: semId, 
+                deuda: deuda 
+            }, { onConflict: 'nombre,semana_id' });
+
+            if (!error) {
+                alert("Reporte actualizado correctamente");
+                cargarDatosGlobales();
+            }
         }
 
         async function cargarDatosGlobales() {
-            const { data } = await supabaseClient.from('registros_asado').select('nombre, deuda');
-            let totales = {}, global = 0;
-            data?.forEach(r => { totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda; global += r.deuda; });
+            const { data } = await client.from('registros_asado').select('*');
+            const semanas = generarSemanas();
+            
+            // Lógica para saber cuál es la "semana pasada"
+            const hoy = new Date();
+            const lunesActual = new Date(hoy);
+            lunesActual.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1);
+            
+            const semAnterior = semanas.filter(s => s.inicio < lunesActual).reverse()[0];
+            const esMartesOMas = hoy.getDay() >= 2 || hoy.getDay() === 0;
+
+            let totales = {}, global = 0, reportesSemAnterior = new Set();
+            
+            data?.forEach(r => {
+                totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda;
+                global += r.deuda;
+                if (semAnterior && r.semana_id === semAnterior.id) reportesSemAnterior.add(r.nombre);
+            });
 
             document.getElementById('totalPozo').innerText = `$${global.toFixed(2)}`;
             const list = document.getElementById('rankingList');
-            list.innerHTML = Object.keys(metasMapping).sort((a,b) => (totales[b]||0) - (totales[a]||0)).map((n, i) => `
-                <div class="card-white p-3 flex justify-between items-center ${n === currentUser ? 'border-2 border-emerald-500 shadow-md' : 'opacity-90'}">
-                    <span class="text-xs font-bold text-slate-600">#${i+1} ${n}</span>
-                    <span class="font-sport text-sm ${totales[n] > 0 ? 'text-red-500' : 'text-slate-200'}">$${(totales[n] || 0).toFixed(2)}</span>
-                </div>
-            `).join('');
+            
+            const ranking = Object.keys(participantes).sort((a,b) => (totales[b]||0) - (totales[a]||0));
+
+            list.innerHTML = ranking.map((n, i) => {
+                const aportado = totales[n] || 0;
+                const alDia = reportesSemAnterior.has(n);
+                const colorSemaf = (!esMartesOMas || alDia) ? 'bg-emerald-500' : 'bg-red-500';
+
+                return `
+                    <div class="card p-3 flex justify-between items-center ${n === currentUser ? 'ring-2 ring-emerald-500' : ''}">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full ${colorSemaf}"></div>
+                            <span class="text-xs font-bold text-slate-700">${n}</span>
+                        </div>
+                        <span class="font-sport text-sm text-slate-800">$${aportado.toFixed(2)}</span>
+                    </div>
+                `;
+            }).join('');
         }
+
         init();
     </script>
 </body>
