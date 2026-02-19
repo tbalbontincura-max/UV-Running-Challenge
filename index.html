@@ -12,8 +12,7 @@
         body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
         .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; }
-        .week-dot { width: 12px; height: 12px; border-radius: 3px; }
-        /* Scrollbar personalizada para que no ocupe espacio visual */
+        .week-dot { width: 14px; height: 14px; border-radius: 4px; transition: all 0.3s; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
@@ -42,7 +41,6 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             <div class="lg:col-span-4 space-y-6">
-                
                 <div class="glass p-8 text-center border-b-4 border-emerald-500">
                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pozo Acumulado</span>
                     <div id="totalPozo" class="text-6xl font-sport text-emerald-400 mt-2">$0.00</div>
@@ -70,14 +68,14 @@
                     <div class="space-y-4">
                         <div>
                             <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Semana de entrenamiento:</label>
-                            <select id="semanaSelector" class="w-full bg-slate-800 border-none rounded-xl p-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500" onchange="cargarReporteSemanal()"></select>
+                            <select id="semanaSelector" class="w-full bg-slate-800 border-none rounded-xl p-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 text-white" onchange="cargarReporteSemanal()"></select>
                         </div>
                         <div class="flex gap-2">
                             <div class="flex-1">
                                 <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Fallos:</label>
-                                <input type="number" id="inputFallos" class="w-full bg-slate-800 border-none rounded-xl p-3 text-xl font-black text-center outline-none" value="0">
+                                <input type="number" id="inputFallos" class="w-full bg-slate-800 border-none rounded-xl p-3 text-xl font-black text-center outline-none text-white" value="0">
                             </div>
-                            <button onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 rounded-xl font-black text-xs uppercase self-end h-[52px] shadow-lg transition-all active:scale-95">Guardar</button>
+                            <button id="btnGuardar" onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 rounded-xl font-black text-xs uppercase self-end h-[52px] shadow-lg transition-all active:scale-95">Guardar</button>
                         </div>
                     </div>
                 </div>
@@ -87,15 +85,16 @@
                 <div class="glass p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="font-sport text-sm text-slate-300">Estado de Participantes</h3>
-                        <div class="flex gap-4 text-[9px] font-bold uppercase">
-                            <span class="flex items-center gap-1"><span class="week-dot bg-emerald-500"></span> Ok</span>
-                            <span class="flex items-center gap-1"><span class="week-dot bg-red-500"></span> Pendiente</span>
+                        <div class="flex gap-4 text-[9px] font-bold uppercase tracking-wider">
+                            <span class="flex items-center gap-1.5"><div class="week-dot bg-emerald-500"></div> Reportado</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot bg-red-500"></div> Pendiente</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot bg-slate-700"></div> Futuro</span>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-12 gap-4 px-4 py-2 text-[9px] font-black text-slate-500 uppercase border-b border-slate-700">
                         <div class="col-span-4">Participante</div>
-                        <div class="col-span-5 text-center">Historial Semanas (Ene 12 - Mar 8)</div>
+                        <div class="col-span-5 text-center">Historial Semanas</div>
                         <div class="col-span-3 text-right">Aporte Total</div>
                     </div>
 
@@ -137,7 +136,7 @@
             const hoy = new Date().getTime();
             const pct = Math.min(Math.max(((hoy - inicio) / (asado - inicio)) * 100, 0), 100);
             document.getElementById('progressBar').style.width = pct + '%';
-            document.getElementById('progressPercent').innerText = `${Math.round(pct)}% del reto cumplido`;
+            document.getElementById('progressPercent').innerText = `${Math.round(pct)}% del camino al asado`;
         }
 
         function init() {
@@ -174,15 +173,31 @@
             const fallos = parseInt(document.getElementById('inputFallos').value);
             const deuda = (30 / participantes[currentUser]) * fallos;
             
+            const btn = document.getElementById('btnGuardar');
+            btn.innerText = "Guardando...";
+
             const { error } = await client.from('registros_asado').upsert({ nombre: currentUser, semana_id: semId, deuda: deuda }, { onConflict: 'nombre,semana_id' });
-            if (!error) { alert("¡Guardado!"); cargarDatosGlobales(); }
+            
+            if (!error) { 
+                btn.innerText = "Guardar";
+                await cargarDatosGlobales(); // ESTO ACTUALIZA LOS CUADRADITOS AL INSTANTE
+            } else {
+                alert("Error al guardar");
+                btn.innerText = "Guardar";
+            }
         }
 
         async function cargarDatosGlobales() {
             const { data } = await client.from('registros_asado').select('*');
-            const hoy = new Date();
+            
+            // Calculamos el inicio de la semana actual para saber qué semanas son pasadas
+            const hoyRef = new Date();
+            const inicioSemanaActual = new Date(hoyRef);
+            inicioSemanaActual.setDate(hoyRef.getDate() - (hoyRef.getDay() || 7) + 1);
+            inicioSemanaActual.setHours(0,0,0,0);
+
             let totales = {}, global = 0;
-            let mapaReportes = {}; // { nombre: { semId: true } }
+            let mapaReportes = {}; 
 
             data?.forEach(r => {
                 totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda;
@@ -199,24 +214,25 @@
             list.innerHTML = ranking.map((n, idx) => {
                 const aporte = totales[n] || 0;
                 
-                // Generar los cuadritos de las semanas
                 const dots = semanas.map(s => {
                     const reportado = mapaReportes[n]?.[s.id];
-                    const esPasada = s.inicio < new Date(hoy.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1));
-                    hoy.setDate(new Date().getDate()); // Reset hoy
+                    const fechaInicioSemana = new Date(s.inicio);
+                    fechaInicioSemana.setHours(0,0,0,0);
+                    
+                    const esPasada = fechaInicioSemana < inicioSemanaActual;
                     
                     let color = 'bg-slate-700'; // Futura
-                    if (reportado) color = 'bg-emerald-500';
-                    else if (esPasada) color = 'bg-red-500';
+                    if (reportado) color = 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.3)]';
+                    else if (esPasada) color = 'bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.3)]';
                     
-                    return `<div class="week-dot ${color}" title="${s.label}"></div>`;
+                    return `<div class="week-dot ${color}" title="${s.label} - ${reportado ? 'Reportado' : (esPasada ? 'Pendiente' : 'Futura')}"></div>`;
                 }).join('');
 
                 return `
-                    <div class="grid grid-cols-12 gap-4 px-4 py-4 items-center hover:bg-white/5 transition">
+                    <div class="grid grid-cols-12 gap-4 px-4 py-4 items-center hover:bg-white/5 transition border-b border-slate-800/50">
                         <div class="col-span-4 flex items-center gap-3">
                             <span class="text-[10px] font-black text-slate-600">${idx+1}</span>
-                            <span class="text-xs font-bold">${n}</span>
+                            <span class="text-xs font-bold ${n === currentUser ? 'text-blue-400' : 'text-slate-200'}">${n}</span>
                         </div>
                         <div class="col-span-5 flex justify-center gap-1.5">
                             ${dots}
