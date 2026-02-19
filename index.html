@@ -98,78 +98,235 @@
         async function cargarReporteSemanal() {
             const semId = document.getElementById('semanaSelector').value;
             const { data } = await client.from('registros_asado').select('deuda').eq('nombre', currentUser).eq('semana_id', semId).maybeSingle();
+            document.getElementById('inputFallos').value = data ? Math.round((data.d<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UV Running - Dashboard Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap');
+        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; }
+        .week-dot { width: 14px; height: 14px; border-radius: 4px; transition: all 0.3s; }
+        .dot-glow-green { box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+        .dot-glow-red { box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 lg:p-8 min-h-screen">
+
+    <div id="loginScreen" class="max-w-md mx-auto mt-20 text-center">
+        <h1 class="text-5xl font-sport text-emerald-400 mb-2 italic text-center">UV RUNNING</h1>
+        <p class="text-slate-400 text-xs tracking-[0.4em] uppercase mb-8 text-center">Management System</p>
+        <div class="glass p-6">
+            <div id="userPicker" class="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto pr-2"></div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden max-w-7xl mx-auto">
+        
+        <header class="flex justify-between items-center mb-6 px-2">
+            <div class="flex items-center gap-4">
+                <h2 class="text-2xl font-sport text-emerald-400 italic">DASHBOARD 2026</h2>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <p id="progressPercent" class="text-[10px] font-black uppercase text-slate-400"></p>
+            </div>
+            <button onclick="location.reload()" class="glass px-4 py-2 text-[10px] font-bold uppercase hover:bg-slate-800 transition">Salir</button>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <div class="lg:col-span-4 space-y-6">
+                <div class="glass p-8 text-center border-b-4 border-emerald-500">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pozo Acumulado</span>
+                    <div id="totalPozo" class="text-6xl font-sport text-emerald-400 mt-2">$0.00</div>
+                </div>
+
+                <div class="glass p-6">
+                    <div class="flex justify-between text-[10px] font-black text-slate-500 mb-3 uppercase">
+                        <span>Inicio: 12 Ene</span>
+                        <span class="text-emerald-400">🍖 Asado: 13 Mar</span>
+                    </div>
+                    <div class="relative h-3 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="progressBar" class="absolute top-0 left-0 h-full bg-emerald-500 transition-all duration-1000"></div>
+                    </div>
+                </div>
+
+                <div class="glass p-6 border-l-4 border-blue-500">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-xl"><i class="fa-solid fa-user"></i></div>
+                        <div>
+                            <h3 id="userNameDisplay" class="font-bold text-lg leading-none"></h3>
+                            <span id="userMetaTag" class="text-[10px] font-black text-blue-400 uppercase"></span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase block mb-1 ml-1">Semana de entrenamiento:</label>
+                            <select id="semanaSelector" class="w-full bg-slate-800 border-none rounded-xl p-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 text-white" onchange="cargarReporteSemanal()"></select>
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <div class="flex-1">
+                                <label class="text-[10px] font-black text-slate-500 uppercase block mb-1 ml-1">Fallos:</label>
+                                <input type="number" id="inputFallos" class="w-full bg-slate-800 border-none rounded-xl p-3 text-xl font-black text-center outline-none text-white h-[52px]" value="0">
+                            </div>
+                            <button id="btnGuardar" onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 rounded-xl font-black text-xs uppercase h-[52px] shadow-lg transition-all active:scale-95 flex items-center justify-center min-w-[120px]">Guardar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-6">
+                <div class="glass p-6">
+                    <div class="flex justify-between items-center mb-6 px-2">
+                        <h3 class="font-sport text-sm text-slate-300">Estado de Participantes</h3>
+                        <div class="flex gap-4 text-[9px] font-bold uppercase tracking-wider">
+                            <span class="flex items-center gap-1.5"><div class="week-dot bg-emerald-500 dot-glow-green"></div> Ok</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot bg-red-500 dot-glow-red"></div> Debe</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot bg-slate-700"></div> Futuro</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 gap-4 px-4 py-2 text-[9px] font-black text-slate-500 uppercase border-b border-slate-700">
+                        <div class="col-span-4">Participante</div>
+                        <div class="col-span-5 text-center">Semanas (Ene 12 - Mar 8)</div>
+                        <div class="col-span-3 text-right pr-2">Total Aportado</div>
+                    </div>
+
+                    <div id="rankingList" class="divide-y divide-slate-800/50 max-h-[500px] overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://yibllgoulqowzewyusdh.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_dYy4Q9ZjPa-015MFbmpNvg_Z_1lSwa6a8b16e4564c70d4f3b0656a9926861218868612';
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const participantes = { "Mati Adauy": 7, "Pablo Torné": 6, "Joaquín Leonart": 5, "Sami Arteaga": 5, "Pedro De la Barra": 5, "Seba Ábalos": 5, "Tomás Balbontín": 4, "Roque Santa Cruz": 4, "Rodrigo Ábalos": 4, "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4, "Seba Domeyko": 3, "Lucas Perez": 3, "Martín González": 3, "Martín Muñoz": 3, "Ignacio Eyzaguirre": 3, "Pablo Bas": 3, "Nacho Achondo": 3, "Tatan Ruiza": 3, "Toto Labán": 3 };
+        
+        const semanas = [];
+        let fechaBase = new Date(2026, 0, 12); 
+        for(let i=0; i<8; i++) {
+            let inicio = new Date(fechaBase);
+            semanas.push({ 
+                id: `sem-${inicio.getDate()}-${inicio.getMonth()+1}`, 
+                label: `S${i+1}: ${inicio.getDate()}/${inicio.getMonth()+1}`,
+                inicio: new Date(inicio)
+            });
+            fechaBase.setDate(fechaBase.getDate() + 7);
+        }
+
+        function actualizarTimeline() {
+            const inicio = new Date(2026, 0, 12).getTime();
+            const asado = new Date(2026, 2, 13).getTime();
+            const hoy = new Date().getTime();
+            const pct = Math.min(Math.max(((hoy - inicio) / (asado - inicio)) * 100, 0), 100);
+            document.getElementById('progressBar').style.width = pct + '%';
+            document.getElementById('progressPercent').innerText = `${Math.round(pct)}% del reto al asado`;
+        }
+
+        function init() {
+            actualizarTimeline();
+            document.getElementById('userPicker').innerHTML = Object.keys(participantes).map(n => `
+                <button onclick="login('${n}')" class="w-full text-left p-3 glass hover:bg-emerald-500/20 rounded-xl font-bold text-sm mb-2 transition flex justify-between">
+                    ${n} <i class="fa-solid fa-chevron-right opacity-20"></i>
+                </button>
+            `).join('');
+
+            document.getElementById('semanaSelector').innerHTML = semanas.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+        }
+
+        async function login(nombre) {
+            currentUser = nombre;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('userNameDisplay').innerText = nombre;
+            document.getElementById('userMetaTag').innerText = `Meta: ${participantes[nombre]} por semana`;
+            await cargarReporteSemanal();
+            await cargarDatosGlobales();
+        }
+
+        async function cargarReporteSemanal() {
+            const semId = document.getElementById('semanaSelector').value;
+            const { data } = await client.from('registros_asado').select('deuda').eq('nombre', currentUser).eq('semana_id', semId).maybeSingle();
             document.getElementById('inputFallos').value = data ? Math.round((data.deuda * participantes[currentUser]) / 30) : 0;
         }
 
         async function enviarReporte() {
-            const btn = document.getElementById('btnGuardar');
             const semId = document.getElementById('semanaSelector').value;
             const fallos = parseInt(document.getElementById('inputFallos').value);
             const deuda = (30 / participantes[currentUser]) * fallos;
+            const btn = document.getElementById('btnGuardar');
 
+            btn.innerText = "Esperar...";
             btn.disabled = true;
-            btn.innerText = "...";
 
-            const { error } = await client.from('registros_asado').upsert({ nombre: currentUser, semana_id: semId, deuda: deuda }, { onConflict: 'nombre,semana_id' });
+            const { error } = await client.from('registros_asado').upsert({ 
+                nombre: currentUser, 
+                semana_id: semId, 
+                deuda: deuda 
+            }, { onConflict: 'nombre,semana_id' });
 
             if (!error) {
-                // PAUSA DE SEGURIDAD PARA QUE SUPABASE PROCESE
+                // Pequeño delay para asegurar que Supabase guardó y luego actualizamos
                 setTimeout(async () => {
                     await cargarDatosGlobales();
-                    btn.disabled = false;
                     btn.innerText = "Guardar";
-                }, 600); 
-            } else {
-                alert("Error de conexión");
-                btn.disabled = false;
+                    btn.disabled = false;
+                }, 800);
             }
         }
 
         async function cargarDatosGlobales() {
-            // Force fetch sin cache
             const { data } = await client.from('registros_asado').select('*');
             
             const hoy = new Date();
-            const lunesActual = new Date();
-            lunesActual.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1);
-            lunesActual.setHours(0,0,0,0);
+            const inicioSemanaActual = new Date();
+            inicioSemanaActual.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1);
+            inicioSemanaActual.setHours(0,0,0,0);
 
-            let totales = {}, mapa = {};
-            let totalGeneral = 0;
-
+            let totales = {}, global = 0, mapa = {};
             data?.forEach(r => {
                 totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda;
-                totalGeneral += r.deuda;
+                global += r.deuda;
                 if(!mapa[r.nombre]) mapa[r.nombre] = {};
                 mapa[r.nombre][r.semana_id] = true;
             });
 
-            document.getElementById('totalPozo').innerText = `$${totalGeneral.toFixed(2)}`;
+            document.getElementById('totalPozo').innerText = `$${global.toFixed(2)}`;
             const ranking = Object.keys(participantes).sort((a,b) => (totales[b]||0) - (totales[a]||0));
 
             document.getElementById('rankingList').innerHTML = ranking.map((n, idx) => {
                 const dots = semanas.map(s => {
                     const ok = mapa[n]?.[s.id];
-                    const pasada = s.inicio < lunesActual;
-                    let color = "bg-slate-700";
+                    const esPasada = new Date(s.inicio).getTime() < inicioSemanaActual.getTime();
+                    let color = 'bg-slate-700';
                     let glow = "";
-                    if (ok) { color = "bg-emerald-500"; glow = "dot-glow-green"; }
-                    else if (pasada) { color = "bg-red-500"; glow = "dot-glow-red"; }
+                    if (ok) { color = 'bg-emerald-500'; glow = "dot-glow-green"; }
+                    else if (esPasada) { color = 'bg-red-500'; glow = "dot-glow-red"; }
                     return `<div class="week-dot ${color} ${glow}"></div>`;
                 }).join('');
 
                 return `
-                    <div class="grid grid-cols-12 gap-2 p-3 items-center border-b border-white/5 hover:bg-white/5 transition">
-                        <div class="col-span-4 flex items-center gap-2">
+                    <div class="grid grid-cols-12 gap-4 px-4 py-4 items-center hover:bg-white/5 transition">
+                        <div class="col-span-4 flex items-center gap-3">
                             <span class="text-[9px] font-black text-slate-600">${idx+1}</span>
-                            <span class="text-xs font-bold ${n === currentUser ? 'text-emerald-400' : 'text-slate-300'}">${n}</span>
+                            <span class="text-xs font-bold ${n === currentUser ? 'text-emerald-400' : 'text-slate-200'}">${n}</span>
                         </div>
                         <div class="col-span-5 flex justify-center gap-1.5">${dots}</div>
-                        <div class="col-span-3 text-right font-sport text-xs text-emerald-500">$${(totales[n] || 0).toFixed(2)}</div>
+                        <div class="col-span-3 text-right font-sport text-emerald-400 text-xs">$${(totales[n] || 0).toFixed(2)}</div>
                     </div>`;
             }).join('');
         }
-
         init();
     </script>
 </body>
