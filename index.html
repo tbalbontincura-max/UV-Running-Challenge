@@ -9,10 +9,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;700;900&display=swap');
-        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; }
+        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; overflow-x: hidden; }
         .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -0.02em; }
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
-        .week-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .week-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
         .dot-ok { background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
         .dot-debe { background: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
         .dot-futuro { background: #334155; }
@@ -22,7 +22,7 @@
 <body class="p-4 md:p-8">
 
     <div id="loginScreen" class="max-w-md mx-auto mt-16 text-center">
-        <h1 class="text-5xl font-sport text-emerald-400 mb-2 italic">UV RUNNING</h1>
+        <h1 class="text-5xl font-sport text-emerald-400 mb-2 italic text-glow">UV RUNNING</h1>
         <p class="text-slate-500 text-[10px] tracking-[0.5em] uppercase mb-8">Management System</p>
         <div class="glass p-6">
             <div id="userPicker" class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-2"></div>
@@ -30,7 +30,6 @@
     </div>
 
     <div id="mainApp" class="hidden max-w-6xl mx-auto">
-        
         <header class="flex justify-between items-center mb-10">
             <div>
                 <h2 class="text-2xl font-sport text-white italic">CHALLENGE 2026</h2>
@@ -40,9 +39,7 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
             <div class="lg:col-span-4 space-y-6">
-                
                 <div class="glass p-6 border-t-2 border-blue-500">
                     <div class="flex justify-between text-[9px] font-black text-slate-500 mb-3">
                         <span>12 ENE (INICIO)</span>
@@ -63,14 +60,14 @@
                     <div class="space-y-4">
                         <div>
                             <label class="text-[9px] font-black text-slate-500 uppercase ml-1 block mb-1">Semana</label>
-                            <select id="semanaSelector" class="w-full bg-slate-800 text-white rounded-xl p-3 font-bold border-none outline-none focus:ring-2 focus:ring-emerald-500" onchange="cargarReporteSemanal()"></select>
+                            <select id="semanaSelector" class="w-full bg-slate-800 text-white rounded-xl p-3 font-bold border-none outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer" onchange="cargarReporteSemanal()"></select>
                         </div>
                         <div class="grid grid-cols-2 gap-3 items-end">
                             <div>
                                 <label class="text-[9px] font-black text-slate-500 uppercase ml-1 block mb-1">Fallos</label>
                                 <input type="number" id="inputFallos" class="w-full bg-slate-800 text-white rounded-xl p-3 text-2xl font-black text-center border-none outline-none" value="0">
                             </div>
-                            <button id="btnGuardar" onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-xl font-black text-xs uppercase h-[56px] transition-all active:scale-95">GUARDAR</button>
+                            <button id="btnGuardar" onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-xl font-black text-xs uppercase h-[56px] transition-all active:scale-95 shadow-lg shadow-emerald-500/20">GUARDAR</button>
                         </div>
                     </div>
                 </div>
@@ -78,22 +75,22 @@
 
             <div class="lg:col-span-8">
                 <div class="glass p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-sport text-sm text-slate-400">Estado de Semanas</h3>
-                        <div class="flex gap-4 text-[8px] font-black uppercase tracking-tighter">
-                            <span class="flex items-center gap-1.5"><div class="week-dot dot-ok"></div> OK</span>
-                            <span class="flex items-center gap-1.5"><div class="week-dot dot-debe"></div> DEBE</span>
-                            <span class="flex items-center gap-1.5"><div class="week-dot dot-futuro"></div> FUTURO</span>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+                        <h3 class="font-sport text-sm text-slate-400">Estado de Reportes</h3>
+                        <div class="flex flex-wrap gap-4 text-[8px] font-black uppercase tracking-tighter">
+                            <span class="flex items-center gap-1.5"><div class="week-dot dot-ok"></div> Reporte al día</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot dot-debe"></div> No ha reportado</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot dot-futuro"></div> Futuro</span>
                         </div>
                     </div>
-
-                    <div id="rankingList" class="space-y-2 max-h-[600px] overflow-y-auto pr-2"></div>
+                    <div id="rankingList" class="space-y-3 max-h-[600px] overflow-y-auto pr-2"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Key limpia sin espacios ni saltos de línea para evitar Invalid API Key
         const SUPABASE_URL = 'https://yibllgoulqowzewyusdh.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_dYy4Q9ZjPa-015MFbmpNvg_Z_1lSwa6a8b16e4564c70d4f3b0656a9926861218868612';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -108,6 +105,8 @@
             d.setDate(d.getDate() + 7);
         }
 
+        let currentUser = "";
+
         function actualizarTimeline() {
             const start = new Date(2026, 0, 12).getTime();
             const end = new Date(2026, 2, 13).getTime();
@@ -120,13 +119,16 @@
         function init() {
             actualizarTimeline();
             const picker = document.getElementById('userPicker');
-            picker.innerHTML = Object.keys(participantes).map(n => `
+            picker.innerHTML = Object.keys(participantes).sort().map(n => `
                 <button onclick="login('${n}')" class="w-full text-left p-4 glass hover:bg-emerald-500/10 rounded-xl font-bold text-sm mb-2 transition flex justify-between items-center group">
                     ${n} <i class="fa-solid fa-chevron-right text-emerald-500 opacity-0 group-hover:opacity-100 transition"></i>
                 </button>
             `).join('');
-            document.getElementById('semanaSelector').innerHTML = semanas.map(s => `<option value="${s.id}">${s.label} (${s.inicio.getDate()}/${s.inicio.getMonth()+1})</option>`).join('');
+            document.getElementById('semanaSelector').innerHTML = semanas.map(s => `<option value="${s.id}">${s.label} (${s.getDateString(s.inicio)})</option>`).join('');
         }
+
+        // Helper para fechas
+        Date.prototype.getDateString = function(d) { return `${d.getDate()}/${d.getMonth()+1}`; };
 
         async function login(nombre) {
             currentUser = nombre;
@@ -149,27 +151,25 @@
             const fallos = parseInt(document.getElementById('inputFallos').value) || 0;
             const deuda = (30 / participantes[currentUser]) * fallos;
 
-            btn.innerText = "GUARDANDO...";
+            btn.innerText = "ESPERA...";
             btn.disabled = true;
 
-            const { error } = await client
-                .from('registros_asado')
-                .upsert({ 
-                    nombre: currentUser, 
-                    semana_id: semId, 
-                    deuda: deuda 
-                }, { onConflict: 'nombre,semana_id' });
+            const { error } = await client.from('registros_asado').upsert({ 
+                nombre: currentUser, 
+                semana_id: semId, 
+                deuda: deuda 
+            }, { onConflict: 'nombre,semana_id' });
 
-            if (!error) {
+            if (error) {
+                alert("Error: " + error.message);
+                btn.innerText = "GUARDAR";
+                btn.disabled = false;
+            } else {
                 setTimeout(async () => {
                     await cargarDatosGlobales();
                     btn.innerText = "GUARDAR";
                     btn.disabled = false;
                 }, 500);
-            } else {
-                alert("Error: " + error.message);
-                btn.innerText = "GUARDAR";
-                btn.disabled = false;
             }
         }
 
@@ -203,12 +203,14 @@
 
                 return `
                     <div class="flex items-center justify-between p-4 glass bg-slate-800/30">
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-4 min-w-[140px]">
                             <span class="text-[10px] font-black text-slate-600">${idx+1}</span>
                             <span class="text-xs font-bold ${n === currentUser ? 'text-emerald-400' : 'text-slate-300'}">${n}</span>
                         </div>
-                        <div class="flex gap-1.5">${dots}</div>
-                        <div class="text-right font-sport text-emerald-500 text-xs w-20">$${(totales[n] || 0).toFixed(2)}</div>
+                        <div class="flex gap-2 mx-4 overflow-x-hidden">
+                            ${dots}
+                        </div>
+                        <div class="text-right font-sport text-emerald-500 text-xs w-20 flex-shrink-0">$${(totales[n] || 0).toFixed(2)}</div>
                     </div>`;
             }).join('');
         }
