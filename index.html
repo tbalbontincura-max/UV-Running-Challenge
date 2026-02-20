@@ -136,6 +136,16 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+
+        /* ── Responsive ── */
+        .main-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .rank-row { flex-wrap: wrap; row-gap: 6px; }
+            .rank-dots-col { order: 3; width: 100%; margin: 0 !important; }
+            .hide-mobile { display: none !important; }
+            .week-dot { width: 10px; height: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -166,8 +176,8 @@
             <button onclick="location.reload()" class="glass" style="padding:8px 20px; font-size:10px; font-weight:800; text-transform:uppercase; color:var(--text-muted); cursor:pointer; border:none;">Salir</button>
         </header>
 
-        <div style="display:grid; grid-template-columns:1fr; gap:24px;">
-            <div style="display:grid; grid-template-columns:1fr 2fr; gap:24px;" id="mainGrid">
+        <div>
+            <div class="main-grid" id="mainGrid">
 
                 <!-- LEFT -->
                 <div style="display:flex; flex-direction:column; gap:18px;">
@@ -176,7 +186,7 @@
                     <div class="glass" style="padding:20px; border-top:3px solid #3b82f6;">
                         <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:800; color:var(--text-muted); margin-bottom:8px;">
                             <span>12 ENE</span>
-                            <span style="color:#3b82f6; font-size:2em;">13 MAR 🍖</span>
+                            <span style="color:#3b82f6; font-size:2em;">11 MAR 🍖</span>
                         </div>
                         <div style="height:10px; background:#e2e8f0; border-radius:99px; overflow:hidden; padding:1px;">
                             <div id="progressBar" class="progress-glow" style="height:100%; border-radius:99px; background:linear-gradient(90deg,#3b82f6,#10b981); width:0%; transition:width 1s;"></div>
@@ -190,6 +200,7 @@
                         <div id="pajeroBox" style="margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0; display:none;">
                             <p style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#ef4444;">🏆 Mayor aportante</p>
                             <p id="pajeroNombre" style="font-size:1rem; font-weight:900; color:#0f172a; margin:4px 0 2px;">—</p>
+                            <p id="pajeroPct" style="font-size:11px; color:#94a3b8; font-weight:600; margin-bottom:2px;"></p>
                             <p style="font-size:11px; color:#ef4444; font-weight:700;">¡Eres un pajero! 🤣</p>
                         </div>
                     </div>
@@ -229,11 +240,13 @@
                         </div>
                     </div>
                     <div id="rankingList" style="max-height:580px; overflow-y:auto; padding-right:4px;">
-                        <!-- Header semanas -->
-                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 16px 8px; border-bottom:1px solid #e2e8f0; margin-bottom:8px;">
-                            <div style="min-width:145px;"></div>
-                            <div id="semanasHeader" style="display:flex; gap:5px; flex:1; margin:0 10px; overflow:hidden;"></div>
-                            <div style="width:65px;"></div>
+                        <!-- Header -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 16px 8px; border-bottom:1px solid #e2e8f0; margin-bottom:8px; font-size:7px; font-weight:900; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em;">
+                            <div style="min-width:145px;">Nombre</div>
+                            <div style="width:32px; text-align:center; flex-shrink:0;" class="hide-mobile">Meta</div>
+                            <div id="semanasHeader" style="display:flex; gap:5px; flex:1; margin:0 8px; overflow:hidden;"></div>
+                            <div style="width:40px; text-align:center; flex-shrink:0;" class="hide-mobile">Fallos</div>
+                            <div style="width:65px; text-align:right; flex-shrink:0;">Multa</div>
                         </div>
                         <div id="rankingRows"></div>
                     </div>
@@ -298,7 +311,7 @@
 
     function actualizarTimeline() {
         const start = new Date(2026, 0, 12).getTime();
-        const end   = new Date(2026, 2, 13).getTime();
+        const end   = new Date(2026, 2, 11).getTime();
         const pct   = Math.min(Math.max(((Date.now() - start) / (end - start)) * 100, 0), 100);
         document.getElementById('progressBar').style.width = pct + '%';
         document.getElementById('progressPercent').innerText = `${Math.round(pct)}% del reto cumplido`;
@@ -405,10 +418,14 @@
         if (error) { console.error(error.message); return; }
 
         const lunes = getLunesActual();
-        let totales = {}, globalPozo = 0, mapa = {};
+        let totales = {}, fallosTotales = {}, globalPozo = 0, mapa = {};
         data?.forEach(r => {
             totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda;
             globalPozo += r.deuda;
+            // calcular fallos totales a partir de deuda y meta
+            const meta = participantes[r.nombre] || 1;
+            const fallos = Math.round((r.deuda * meta) / 30);
+            fallosTotales[r.nombre] = (fallosTotales[r.nombre] || 0) + fallos;
             if (!mapa[r.nombre]) mapa[r.nombre] = {};
             mapa[r.nombre][r.semana_id] = true;
         });
@@ -424,6 +441,8 @@
         const pajero = Object.keys(totales).sort((a,b) => totales[b] - totales[a])[0];
         if (pajero && totales[pajero] > 0) {
             document.getElementById('pajeroNombre').innerText = pajero;
+            const pct = globalPozo > 0 ? ((totales[pajero] / globalPozo) * 100).toFixed(1) : 0;
+            document.getElementById('pajeroPct').innerText = `Ha pagado $${totales[pajero].toFixed(2)} — el ${pct}% del pozo`;
             document.getElementById('pajeroBox').style.display = 'block';
         } else {
             document.getElementById('pajeroBox').style.display = 'none';
@@ -440,14 +459,22 @@
                 return `<div class="week-dot ${cls}" title="${s.label}"></div>`;
             }).join('');
 
-            const esYo = n === currentUser;
+            const esYo  = n === currentUser;
+            const meta  = participantes[n] || 0;
+            const fallos = fallosTotales[n] || 0;
             return `
                 <div class="rank-row ${esYo ? 'me' : ''}">
-                    <div style="display:flex; align-items:center; gap:12px; min-width:145px;">
+                    <div style="display:flex; align-items:center; gap:10px; min-width:145px;">
                         <span style="font-size:10px; font-weight:900; color:#94a3b8;">${idx+1}</span>
                         <span style="font-size:12px; font-weight:700; color:${esYo ? '#059669' : '#0f172a'};">${n}</span>
                     </div>
-                    <div style="display:flex; gap:5px; flex:1; margin:0 10px; overflow:hidden;">${dots}</div>
+                    <div style="width:32px; text-align:center; flex-shrink:0;" class="hide-mobile">
+                        <span style="font-size:11px; font-weight:800; color:#3b82f6;">${meta}x</span>
+                    </div>
+                    <div class="rank-dots-col" style="display:flex; gap:5px; flex:1; margin:0 8px; overflow:hidden;">${dots}</div>
+                    <div style="width:40px; text-align:center; flex-shrink:0;" class="hide-mobile">
+                        <span style="font-size:11px; font-weight:800; color:${fallos > 0 ? '#ef4444' : '#10b981'};">${fallos}</span>
+                    </div>
                     <div class="font-sport" style="color:#059669; font-size:12px; width:65px; text-align:right; flex-shrink:0;">
                         $${(totales[n]||0).toFixed(2)}
                     </div>
