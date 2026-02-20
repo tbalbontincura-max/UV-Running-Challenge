@@ -143,7 +143,7 @@
             document.getElementById('inputFallos').value = data ? Math.round((data.deuda * participantes[currentUser]) / 30) : 0;
         }
 
-       async function enviarReporte() {
+        async function enviarReporte() {
             const btn = document.getElementById('btnGuardar');
             const semId = document.getElementById('semanaSelector').value;
             const fallos = parseInt(document.getElementById('inputFallos').value) || 0;
@@ -152,36 +152,24 @@
             btn.innerText = "GUARDANDO...";
             btn.disabled = true;
 
-            // ESTA ES LA PARTE QUE FALTA EN TU IMAGEN:
             const { error } = await client
                 .from('registros_asado')
                 .upsert({ 
                     nombre: currentUser, 
                     semana_id: semId, 
                     deuda: deuda 
-                }, { onConflict: 'nombre,semana_id' }); 
+                }, { onConflict: 'nombre,semana_id' });
 
-            if (!error) {
-                // Si no hay error, esperamos medio segundo y refrescamos el pozo
-                setTimeout(async () => {
-                    await cargarDatosGlobales();
-                    btn.innerText = "GUARDAR";
-                    btn.disabled = false;
-                }, 600);
-            } else {
-                // Si algo sale mal, te avisará con el error de Supabase
-                console.error("Error:", error.message);
-                alert("Error al guardar: " + error.message);
-                btn.innerText = "GUARDAR";
-                btn.disabled = false;
-            }
-        };
             if (!error) {
                 setTimeout(async () => {
                     await cargarDatosGlobales();
                     btn.innerText = "GUARDAR";
                     btn.disabled = false;
                 }, 500);
+            } else {
+                alert("Error: " + error.message);
+                btn.innerText = "GUARDAR";
+                btn.disabled = false;
             }
         }
 
@@ -210,7 +198,7 @@
                     let color = "dot-futuro";
                     if (ok) color = "dot-ok";
                     else if (esPasada) color = "dot-debe";
-                    return `<div class="week-dot ${color}" title="${s.label}"></div>`;
+                    return `<div class="week-dot ${color}"></div>`;
                 }).join('');
 
                 return `
