@@ -3,40 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UV Running - Dashboard Final</title>
+    <title>UV Running - Dashboard Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;600;800&display=swap');
-        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; }
-        .week-dot { width: 14px; height: 14px; border-radius: 4px; transition: all 0.3s ease; }
-        .dot-glow-green { background-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-        .dot-glow-red { background-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
-        .dot-future { background-color: #334155; }
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;700;900&display=swap');
+        body { background: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; margin: 0; }
+        .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -0.02em; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; }
+        .week-dot { width: 12px; height: 12px; border-radius: 3px; }
+        .dot-ok { background: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+        .dot-debe { background: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .dot-futuro { background: #334155; }
+        .progress-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
     </style>
 </head>
-<body class="p-4 lg:p-8 min-h-screen">
+<body class="p-4 md:p-8">
 
-    <div id="loginScreen" class="max-w-md mx-auto mt-20 text-center">
+    <div id="loginScreen" class="max-w-md mx-auto mt-16 text-center">
         <h1 class="text-5xl font-sport text-emerald-400 mb-2 italic">UV RUNNING</h1>
-        <p class="text-slate-400 text-[10px] tracking-[0.4em] uppercase mb-8">Management System</p>
+        <p class="text-slate-500 text-[10px] tracking-[0.5em] uppercase mb-8">Management System</p>
         <div class="glass p-6">
-            <div id="userPicker" class="grid grid-cols-1 gap-2 max-h-96 overflow-y-auto pr-2"></div>
+            <div id="userPicker" class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-2"></div>
         </div>
     </div>
 
-    <div id="mainApp" class="hidden max-w-7xl mx-auto">
+    <div id="mainApp" class="hidden max-w-6xl mx-auto">
         
-        <header class="flex justify-between items-center mb-8 px-2">
-            <div class="flex items-center gap-4">
-                <h2 class="text-2xl font-sport text-emerald-400 italic">CHALLENGE 2026</h2>
-                <div class="h-6 w-px bg-slate-700"></div>
-                <p id="progressPercent" class="text-[10px] font-black uppercase text-slate-400 tracking-widest"></p>
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h2 class="text-2xl font-sport text-white italic">CHALLENGE 2026</h2>
+                <p id="progressPercent" class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest mt-1"></p>
             </div>
-            <button onclick="location.reload()" class="glass px-6 py-2 text-[10px] font-black uppercase hover:bg-red-500/20 transition">Salir</button>
+            <button onclick="location.reload()" class="glass px-6 py-2 text-[10px] font-black uppercase hover:bg-red-500/10 transition">Salir</button>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -44,60 +44,50 @@
             <div class="lg:col-span-4 space-y-6">
                 
                 <div class="glass p-6 border-t-2 border-blue-500">
-                    <div class="flex justify-between text-[10px] font-black text-slate-500 mb-3 uppercase">
-                        <span>Inicio: 12 ENE</span>
-                        <span class="text-emerald-400">🍖 ASADO: 13 MAR</span>
+                    <div class="flex justify-between text-[9px] font-black text-slate-500 mb-3">
+                        <span>12 ENE (INICIO)</span>
+                        <span class="text-blue-400">13 MAR (ASADO 🍖)</span>
                     </div>
-                    <div class="relative h-4 bg-slate-800 rounded-full overflow-hidden p-1 shadow-inner">
-                        <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    <div class="h-3 bg-slate-800 rounded-full overflow-hidden p-0.5">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000 progress-glow" style="width: 0%"></div>
                     </div>
                 </div>
 
-                <div class="glass p-8 text-center border-b-4 border-emerald-500 shadow-2xl">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Monto en el pozo</span>
-                    <div id="totalPozo" class="text-7xl font-sport text-white tracking-tighter">$0.00</div>
+                <div class="glass p-8 text-center border-b-4 border-emerald-500">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Pozo Total Acumulado</span>
+                    <div id="totalPozo" class="text-6xl font-sport text-white mt-2 tracking-tighter">$0.00</div>
                 </div>
 
                 <div class="glass p-6 border-l-4 border-emerald-500">
-                    <h3 id="userNameDisplay" class="font-black text-xl mb-6 text-white italic"></h3>
-                    
-                    <div class="space-y-5">
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[10px] font-black text-slate-500 uppercase ml-1">Elegir Semana</label>
-                            <select id="semanaSelector" class="w-full bg-slate-800 border-none rounded-xl p-3 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-emerald-500" onchange="cargarReporteSemanal()"></select>
+                    <h3 id="userNameDisplay" class="font-bold text-xl text-white mb-6 italic text-emerald-400"></h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[9px] font-black text-slate-500 uppercase ml-1 block mb-1">Semana</label>
+                            <select id="semanaSelector" class="w-full bg-slate-800 text-white rounded-xl p-3 font-bold border-none outline-none focus:ring-2 focus:ring-emerald-500" onchange="cargarReporteSemanal()"></select>
                         </div>
-
-                        <div class="flex items-end gap-3">
-                            <div class="flex-1 flex flex-col gap-1">
-                                <label class="text-[10px] font-black text-slate-500 uppercase ml-1">Fallos</label>
-                                <input type="number" id="inputFallos" class="w-full bg-slate-800 border-none rounded-xl p-3 text-2xl font-black text-center text-white outline-none h-[56px]" value="0">
+                        <div class="grid grid-cols-2 gap-3 items-end">
+                            <div>
+                                <label class="text-[9px] font-black text-slate-500 uppercase ml-1 block mb-1">Fallos</label>
+                                <input type="number" id="inputFallos" class="w-full bg-slate-800 text-white rounded-xl p-3 text-2xl font-black text-center border-none outline-none" value="0">
                             </div>
-                            <button id="btnGuardar" onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-8 h-[56px] rounded-xl font-black text-[11px] uppercase shadow-lg shadow-emerald-900/20 active:scale-95 transition-all">
-                                GUARDAR
-                            </button>
+                            <button id="btnGuardar" onclick="enviarReporte()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-900 rounded-xl font-black text-xs uppercase h-[56px] transition-all active:scale-95">GUARDAR</button>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-8">
-                <div class="glass p-6 h-full">
-                    <div class="flex justify-between items-center mb-8">
-                        <h3 class="font-sport text-sm text-slate-400 tracking-widest">Tracking de Participantes</h3>
-                        <div class="flex gap-4 text-[9px] font-black uppercase tracking-tighter">
-                            <span class="flex items-center gap-1.5"><div class="week-dot dot-glow-green"></div> OK</span>
-                            <span class="flex items-center gap-1.5"><div class="week-dot dot-glow-red"></div> DEBE</span>
-                            <span class="flex items-center gap-1.5"><div class="week-dot dot-future"></div> -</span>
+                <div class="glass p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-sport text-sm text-slate-400">Estado de Semanas</h3>
+                        <div class="flex gap-4 text-[8px] font-black uppercase tracking-tighter">
+                            <span class="flex items-center gap-1.5"><div class="week-dot dot-ok"></div> OK</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot dot-debe"></div> DEBE</span>
+                            <span class="flex items-center gap-1.5"><div class="week-dot dot-futuro"></div> FUTURO</span>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-12 gap-4 px-4 py-3 text-[9px] font-black text-slate-500 uppercase border-b border-slate-800">
-                        <div class="col-span-4">Corredor</div>
-                        <div class="col-span-5 text-center">Progreso Semanal</div>
-                        <div class="col-span-3 text-right">Aporte</div>
-                    </div>
-
-                    <div id="rankingList" class="divide-y divide-slate-800/50 overflow-y-auto pr-2"></div>
+                    <div id="rankingList" class="space-y-2 max-h-[600px] overflow-y-auto pr-2"></div>
                 </div>
             </div>
         </div>
@@ -112,9 +102,9 @@
         
         const semanas = [];
         let d = new Date(2026, 0, 12);
-        for(let i=0; i<8; i++) {
+        for(let i=0; i<9; i++) {
             let s = new Date(d);
-            semanas.push({ id: `sem-${s.getDate()}-${s.getMonth()+1}`, label: `Semana ${i+1}`, inicio: s });
+            semanas.push({ id: `sem-${s.getDate()}-${s.getMonth()+1}`, label: `S${i+1}`, inicio: s });
             d.setDate(d.getDate() + 7);
         }
 
@@ -124,23 +114,23 @@
             const now = new Date().getTime();
             const pct = Math.min(Math.max(((now - start) / (end - start)) * 100, 0), 100);
             document.getElementById('progressBar').style.width = pct + '%';
-            document.getElementById('progressPercent').innerText = `${Math.round(pct)}% completado`;
+            document.getElementById('progressPercent').innerText = `${Math.round(pct)}% del reto cumplido`;
         }
 
         function init() {
             actualizarTimeline();
             const picker = document.getElementById('userPicker');
             picker.innerHTML = Object.keys(participantes).map(n => `
-                <button onclick="login('${n}')" class="w-full text-left p-4 glass hover:bg-emerald-500/20 rounded-xl font-bold text-sm mb-2 transition flex justify-between items-center group">
-                    ${n} <i class="fa-solid fa-arrow-right opacity-0 group-hover:opacity-100 transition"></i>
+                <button onclick="login('${n}')" class="w-full text-left p-4 glass hover:bg-emerald-500/10 rounded-xl font-bold text-sm mb-2 transition flex justify-between items-center group">
+                    ${n} <i class="fa-solid fa-chevron-right text-emerald-500 opacity-0 group-hover:opacity-100 transition"></i>
                 </button>
             `).join('');
-            document.getElementById('semanaSelector').innerHTML = semanas.map(s => `<option value="${s.id}">${s.label}</option>`).join('');
+            document.getElementById('semanaSelector').innerHTML = semanas.map(s => `<option value="${s.id}">${s.label} (${s.inicio.getDate()}/${s.inicio.getMonth()+1})</option>`).join('');
         }
 
         async function login(nombre) {
             currentUser = nombre;
-            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('userNameDisplay').innerText = nombre;
             await cargarReporteSemanal();
@@ -156,25 +146,25 @@
         async function enviarReporte() {
             const btn = document.getElementById('btnGuardar');
             const semId = document.getElementById('semanaSelector').value;
-            const fallos = parseInt(document.getElementById('inputFallos').value);
+            const fallos = parseInt(document.getElementById('inputFallos').value) || 0;
             const deuda = (30 / participantes[currentUser]) * fallos;
 
-            btn.innerText = "OK...";
+            btn.innerText = "ESPERA...";
             btn.disabled = true;
 
             const { error } = await client.from('registros_asado').upsert({ nombre: currentUser, semana_id: semId, deuda: deuda }, { onConflict: 'nombre,semana_id' });
             
             if (!error) {
-                // Actualizar visualmente de inmediato
-                await cargarDatosGlobales();
-                btn.innerText = "GUARDAR";
-                btn.disabled = false;
+                setTimeout(async () => {
+                    await cargarDatosGlobales();
+                    btn.innerText = "GUARDAR";
+                    btn.disabled = false;
+                }, 500);
             }
         }
 
         async function cargarDatosGlobales() {
             const { data } = await client.from('registros_asado').select('*');
-            
             const hoy = new Date();
             const lunesActual = new Date();
             lunesActual.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1);
@@ -193,22 +183,22 @@
 
             document.getElementById('rankingList').innerHTML = ranking.map((n, idx) => {
                 const dots = semanas.map(s => {
-                    const reportado = mapa[n]?.[s.id];
+                    const ok = mapa[n]?.[s.id];
                     const esPasada = s.inicio.getTime() < lunesActual.getTime();
-                    let colorClass = "dot-future";
-                    if (reportado) colorClass = "dot-glow-green";
-                    else if (esPasada) colorClass = "dot-glow-red";
-                    return `<div class="week-dot ${colorClass}"></div>`;
+                    let color = "dot-futuro";
+                    if (ok) color = "dot-ok";
+                    else if (esPasada) color = "dot-debe";
+                    return `<div class="week-dot ${color}" title="${s.label}"></div>`;
                 }).join('');
 
                 return `
-                    <div class="grid grid-cols-12 gap-4 px-4 py-4 items-center hover:bg-white/5 transition">
-                        <div class="col-span-4 flex items-center gap-3">
-                            <span class="text-[9px] font-black text-slate-600">${idx+1}</span>
-                            <span class="text-xs font-bold ${n === currentUser ? 'text-emerald-400 font-black' : 'text-slate-200'}">${n}</span>
+                    <div class="flex items-center justify-between p-4 glass bg-slate-800/30">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-black text-slate-600">${idx+1}</span>
+                            <span class="text-xs font-bold ${n === currentUser ? 'text-emerald-400' : 'text-slate-300'}">${n}</span>
                         </div>
-                        <div class="col-span-5 flex justify-center gap-2">${dots}</div>
-                        <div class="col-span-3 text-right font-sport text-emerald-400 text-xs">$${(totales[n] || 0).toFixed(2)}</div>
+                        <div class="flex gap-1.5">${dots}</div>
+                        <div class="text-right font-sport text-emerald-500 text-xs w-20">$${(totales[n] || 0).toFixed(2)}</div>
                     </div>`;
             }).join('');
         }
