@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UV Running - Dashboard Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;700;900&display=swap');
+
+        :root {
+            --bg: #f0f4f8;
+            --glass: rgba(255,255,255,0.65);
+            --glass-border: rgba(255,255,255,0.9);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ── Sports icons background ── */
+        .sports-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .sports-bg span {
+            position: absolute;
+            opacity: 0.07;
+            animation: floatIcon 16s infinite ease-in-out;
+            user-select: none;
+            line-height: 1;
+        }
+        @keyframes floatIcon {
+            0%   { transform: translateY(0px) rotate(0deg); }
+            50%  { transform: translateY(-25px) rotate(15deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+
+        .page-content { position: relative; z-index: 1; }
+
+        .font-sport { font-family: 'Archivo Black', sans-serif; text-transform: uppercase; letter-spacing: -0.02em; }
+
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+        }
+
+        .week-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+        .dot-ok    { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+        .dot-debe  { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+        .dot-futuro{ background: #cbd5e1; }
+
+        .progress-glow { box-shadow: 0 0 15px rgba(16,185,129,0.3); }
+
+        .user-btn {
+            width: 100%;
+            text-align: left;
+            padding: 14px 18px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .user-btn:hover { background: rgba(16,185,129,0.12); border-color: #10b981; }
+
+        select, input[type=number] {
+            background: rgba(255,255,255,0.85);
+            color: var(--text-main);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: border 0.2s;
+            width: 100%;
+        }
+        select:focus, input:focus { border-color: #10b981; }
+
+        .btn-save {
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Archivo Black', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            height: 52px;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+        }
+        .btn-save:hover  { background: #059669; transform: translateY(-1px); }
+        .btn-save:active { transform: scale(0.97); }
+        .btn-save:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        .rank-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 14px;
+            margin-bottom: 8px;
+            transition: background 0.2s;
+        }
+        .rank-row.me { border-color: #10b981; background: rgba(16,185,129,0.08); }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+    </style>
+</head>
+<body>
+
+<div class="sports-bg" id="sportsBg"></div>
+
+<div class="page-content p-4 md:p-8">
+
+    <!-- LOGIN -->
+    <div id="loginScreen" class="max-w-md mx-auto mt-12 text-center">
+        <div class="mb-8">
+            <h1 class="text-5xl font-sport italic" style="color:#059669;">UV RUNNING</h1>
+            <p style="font-size:9px; letter-spacing:0.5em; color:var(--text-muted); text-transform:uppercase; margin-top:4px;">Challenge 2026 · Management System</p>
+        </div>
+        <div class="glass p-6">
+            <p style="font-size:10px; font-weight:800; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.15em; margin-bottom:14px;">¿Quién eres?</p>
+            <div id="userPicker" style="max-height:62vh; overflow-y:auto; padding-right:4px;"></div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="hidden max-w-6xl mx-auto">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:32px;">
+            <div>
+                <h2 class="font-sport" style="font-size:1.5rem; color:var(--text-main);">CHALLENGE 2026</h2>
+                <p id="progressPercent" style="font-size:10px; font-weight:800; color:#10b981; text-transform:uppercase; letter-spacing:0.15em; margin-top:4px;"></p>
+            </div>
+            <button onclick="location.reload()" class="glass" style="padding:8px 20px; font-size:10px; font-weight:800; text-transform:uppercase; color:var(--text-muted); cursor:pointer; border:none;">Salir</button>
+        </header>
+
+        <div style="display:grid; grid-template-columns:1fr; gap:24px;">
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:24px;" id="mainGrid">
+
+                <!-- LEFT -->
+                <div style="display:flex; flex-direction:column; gap:18px;">
+
+                    <!-- Progress -->
+                    <div class="glass" style="padding:20px; border-top:3px solid #3b82f6;">
+                        <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:800; color:var(--text-muted); margin-bottom:8px;">
+                            <span>12 ENE</span>
+                            <span style="color:#3b82f6; font-size:2em;">13 MAR 🍖</span>
+                        </div>
+                        <div style="height:10px; background:#e2e8f0; border-radius:99px; overflow:hidden; padding:1px;">
+                            <div id="progressBar" class="progress-glow" style="height:100%; border-radius:99px; background:linear-gradient(90deg,#3b82f6,#10b981); width:0%; transition:width 1s;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Pozo -->
+                    <div class="glass" style="padding:28px; text-align:center; border-bottom:4px solid #10b981;">
+                        <p style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted);">Pozo Total Acumulado</p>
+                        <div id="totalPozo" class="font-sport" style="font-size:3rem; color:#059669; margin-top:8px; letter-spacing:-0.03em;">$0.00</div>
+                        <div id="pajeroBox" style="margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0; display:none;">
+                            <p style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#ef4444;">🏆 Mayor aportante</p>
+                            <p id="pajeroNombre" style="font-size:1rem; font-weight:900; color:#0f172a; margin:4px 0 2px;">—</p>
+                            <p style="font-size:11px; color:#ef4444; font-weight:700;">¡Eres un pajero! 🤣</p>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="glass" style="padding:24px; border-left:4px solid #10b981;">
+                        <h3 id="userNameDisplay" style="font-weight:800; font-size:1.1rem; color:#059669; margin-bottom:20px; font-style:italic;"></h3>
+
+                        <div style="margin-bottom:14px;">
+                            <label style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); display:block; margin-bottom:6px;">Semana</label>
+                            <select id="semanaSelector" onchange="cargarReporteSemanal()"></select>
+                        </div>
+
+                        <div style="margin-bottom:10px;">
+                            <label style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); display:block; margin-bottom:6px;">
+                                Fallos <span id="metaLabel" style="color:#10b981;"></span>
+                            </label>
+                            <input type="number" id="inputFallos" value="0" min="0" style="font-size:1.8rem; font-weight:900; text-align:center;">
+                        </div>
+
+                        <p style="font-size:11px; color:var(--text-muted); text-align:center; margin-bottom:12px;">
+                            Multa esta semana: <strong id="multaPreview" style="color:#059669;">$0.00</strong>
+                        </p>
+
+                        <button id="btnGuardar" class="btn-save" onclick="enviarReporte()">GUARDAR</button>
+                    </div>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="glass" style="padding:24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                        <h3 class="font-sport" style="font-size:0.75rem; color:var(--text-muted);">Estado de Reportes</h3>
+                        <div style="display:flex; gap:14px; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); flex-wrap:wrap;">
+                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-ok"></div>Al día</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-debe"></div>Sin reporte</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-futuro"></div>Futuro</span>
+                        </div>
+                    </div>
+                    <div id="rankingList" style="max-height:580px; overflow-y:auto; padding-right:4px;">
+                        <!-- Header semanas -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 16px 8px; border-bottom:1px solid #e2e8f0; margin-bottom:8px;">
+                            <div style="min-width:145px;"></div>
+                            <div id="semanasHeader" style="display:flex; gap:5px; flex:1; margin:0 10px; overflow:hidden;"></div>
+                            <div style="width:65px;"></div>
+                        </div>
+                        <div id="rankingRows"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://yibllgoulqowzewyusdh.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpYmxsZ291bHFvd3pld3l1c2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzODAxODksImV4cCI6MjA4Njk1NjE4OX0.JcDzcK_xDIBaXI_sZQGGvEl9-2x4BeuDMZQRV2DJWUs';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ✅ FIX: Tatán Ruiz (corregido)
+    const participantes = {
+        "Mati Adauy": 7, "Pablo Torné": 6, "Joaquín Leonart": 5,
+        "Sami Arteaga": 5, "Pedro De la Barra": 5, "Seba Ábalos": 5,
+        "Tomás Balbontín": 4, "Roque Santa Cruz": 4, "Rodrigo Ábalos": 4,
+        "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4, "JT Ábalos": 4,
+        "Seba Domeyko": 3, "Lucas Perez": 3, "Martín González": 3,
+        "Martín Muñoz": 3, "Ignacio Eyzaguirre": 3, "Pablo Bas": 3,
+        "Nacho Achondo": 3, "Tatán Ruiz": 3, "Toto Labán": 3
+    };
+
+    const semanas = [];
+    {
+        let d = new Date(2026, 0, 12);
+        for (let i = 0; i < 9; i++) {
+            let s = new Date(d);
+            semanas.push({ id: `sem-${s.getDate()}-${s.getMonth()+1}`, label: `S${i+1}`, inicio: s });
+            d.setDate(d.getDate() + 7);
+        }
+    }
+
+    let currentUser = "";
+
+    // ── Build background sports icons ──
+    function buildBg() {
+        const icons = ['⚽','🎾','🏃','🏊','🚴','🏋️','🥊','🏅','🎽','🏆','🤸','⛹️','🏌️','🧗'];
+        const bg = document.getElementById('sportsBg');
+        for (let i = 0; i < 30; i++) {
+            const span = document.createElement('span');
+            span.textContent = icons[i % icons.length];
+            span.style.left = (Math.random() * 98) + 'vw';
+            span.style.top  = (Math.random() * 98) + 'vh';
+            span.style.fontSize = (1.5 + Math.random() * 2.8) + 'rem';
+            span.style.animationDelay    = (Math.random() * 10) + 's';
+            span.style.animationDuration = (12 + Math.random() * 10) + 's';
+            bg.appendChild(span);
+        }
+    }
+
+    function getLunesActual() {
+        const hoy = new Date();
+        const lunes = new Date(hoy);
+        lunes.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1);
+        lunes.setHours(0, 0, 0, 0);
+        return lunes;
+    }
+
+    function actualizarTimeline() {
+        const start = new Date(2026, 0, 12).getTime();
+        const end   = new Date(2026, 2, 13).getTime();
+        const pct   = Math.min(Math.max(((Date.now() - start) / (end - start)) * 100, 0), 100);
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressPercent').innerText = `${Math.round(pct)}% del reto cumplido`;
+    }
+
+    function init() {
+        buildBg();
+        actualizarTimeline();
+
+        // Login buttons
+        document.getElementById('userPicker').innerHTML =
+            Object.keys(participantes).sort().map(n => `
+                <button class="user-btn" onclick="login('${n}')">
+                    ${n}
+                    <i class="fa-solid fa-chevron-right" style="color:#10b981; font-size:11px;"></i>
+                </button>
+            `).join('');
+
+        // Semana selector — bloqueadas: en curso y futuras (solo se reportan semanas ya terminadas)
+        const lunes = getLunesActual();
+        document.getElementById('semanaSelector').innerHTML = semanas.map(s => {
+            const bloqueada = s.inicio.getTime() >= lunes.getTime();
+            return `<option value="${s.id}" ${bloqueada ? 'disabled' : ''}>
+                ${s.label} (${s.inicio.getDate()}/${s.inicio.getMonth()+1})${bloqueada ? ' 🔒' : ''}
+            </option>`;
+        }).join('');
+
+        // Default: última semana ya terminada
+        const sel = document.getElementById('semanaSelector');
+        const terminadas = semanas.filter(s => s.inicio.getTime() < lunes.getTime());
+        if (terminadas.length) sel.value = terminadas[terminadas.length - 1].id;
+    }
+
+    async function login(nombre) {
+        currentUser = nombre;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').classList.remove('hidden');
+        document.getElementById('userNameDisplay').innerText = nombre;
+
+        const meta = participantes[nombre];
+        document.getElementById('metaLabel').innerText = `(máx. ${meta})`;
+        document.getElementById('inputFallos').max = meta;
+        document.getElementById('inputFallos').addEventListener('input', actualizarMultaPreview);
+
+        await cargarReporteSemanal();
+        await cargarDatosGlobales();
+    }
+
+    // ✅ Preview de multa + clamp de fallos
+    function actualizarMultaPreview() {
+        const meta  = participantes[currentUser] || 1;
+        let fallos  = parseInt(document.getElementById('inputFallos').value) || 0;
+        if (fallos > meta) { fallos = meta; document.getElementById('inputFallos').value = meta; }
+        if (fallos < 0)    { fallos = 0;    document.getElementById('inputFallos').value = 0; }
+        document.getElementById('multaPreview').innerText = `$${((30 / meta) * fallos).toFixed(2)}`;
+    }
+
+    async function cargarReporteSemanal() {
+        const semId = document.getElementById('semanaSelector').value;
+        const { data } = await client.from('registros_asado').select('deuda').eq('nombre', currentUser).eq('semana_id', semId).maybeSingle();
+        const meta   = participantes[currentUser] || 1;
+        const fallos = data ? Math.round((data.deuda * meta) / 30) : 0;
+        document.getElementById('inputFallos').value = fallos;
+        actualizarMultaPreview();
+
+        // Bloquear botón si semana en curso o futura
+        const semObj    = semanas.find(s => s.id === semId);
+        const bloqueada = semObj && semObj.inicio.getTime() >= getLunesActual().getTime();
+        document.getElementById('btnGuardar').disabled = !!bloqueada;
+    }
+
+    async function enviarReporte() {
+        const btn    = document.getElementById('btnGuardar');
+        const semId  = document.getElementById('semanaSelector').value;
+        const meta   = participantes[currentUser] || 1;
+        let fallos   = parseInt(document.getElementById('inputFallos').value) || 0;
+
+        // ✅ Clamp + validación semana futura
+        if (fallos > meta) fallos = meta;
+        if (fallos < 0)    fallos = 0;
+        const semObj   = semanas.find(s => s.id === semId);
+        if (semObj && semObj.inicio.getTime() >= getLunesActual().getTime()) {
+            alert('Solo puedes reportar semanas ya terminadas.');
+            return;
+        }
+
+        const deuda = (30 / meta) * fallos;
+        btn.innerText = 'ESPERA...';
+        btn.disabled  = true;
+
+        const { error } = await client.from('registros_asado').upsert({
+            nombre: currentUser, semana_id: semId, deuda
+        }, { onConflict: 'nombre,semana_id' });
+
+        if (error) { alert('Error: ' + error.message); console.error(error); }
+        else await cargarDatosGlobales();
+
+        btn.innerText = 'GUARDAR';
+        btn.disabled  = false;
+    }
+
+    async function cargarDatosGlobales() {
+        const { data, error } = await client.from('registros_asado').select('*');
+        if (error) { console.error(error.message); return; }
+
+        const lunes = getLunesActual();
+        let totales = {}, globalPozo = 0, mapa = {};
+        data?.forEach(r => {
+            totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda;
+            globalPozo += r.deuda;
+            if (!mapa[r.nombre]) mapa[r.nombre] = {};
+            mapa[r.nombre][r.semana_id] = true;
+        });
+
+        document.getElementById('totalPozo').innerText = `$${globalPozo.toFixed(2)}`;
+
+        // Header S1–S9
+        document.getElementById('semanasHeader').innerHTML = semanas.map(s =>
+            `<div style="width:12px; font-size:7px; font-weight:900; color:#94a3b8; text-align:center; flex-shrink:0;">${s.label}</div>`
+        ).join('');
+
+        // Pajero: el que más ha aportado
+        const pajero = Object.keys(totales).sort((a,b) => totales[b] - totales[a])[0];
+        if (pajero && totales[pajero] > 0) {
+            document.getElementById('pajeroNombre').innerText = pajero;
+            document.getElementById('pajeroBox').style.display = 'block';
+        } else {
+            document.getElementById('pajeroBox').style.display = 'none';
+        }
+        const ranking = Object.keys(participantes).sort((a, b) => (totales[b]||0) - (totales[a]||0));
+
+        document.getElementById('rankingRows').innerHTML = ranking.map((n, idx) => {
+            const dots = semanas.map(s => {
+                const ok       = mapa[n]?.[s.id];
+                const esPasada = s.inicio.getTime() < lunes.getTime();
+                let cls = 'dot-futuro';
+                if (ok) cls = 'dot-ok';
+                else if (esPasada) cls = 'dot-debe';
+                return `<div class="week-dot ${cls}" title="${s.label}"></div>`;
+            }).join('');
+
+            const esYo = n === currentUser;
+            return `
+                <div class="rank-row ${esYo ? 'me' : ''}">
+                    <div style="display:flex; align-items:center; gap:12px; min-width:145px;">
+                        <span style="font-size:10px; font-weight:900; color:#94a3b8;">${idx+1}</span>
+                        <span style="font-size:12px; font-weight:700; color:${esYo ? '#059669' : '#0f172a'};">${n}</span>
+                    </div>
+                    <div style="display:flex; gap:5px; flex:1; margin:0 10px; overflow:hidden;">${dots}</div>
+                    <div class="font-sport" style="color:#059669; font-size:12px; width:65px; text-align:right; flex-shrink:0;">
+                        $${(totales[n]||0).toFixed(2)}
+                    </div>
+                </div>`;
+        }).join('');
+    }
+
+    init();
+</script>
+</body>
+</html>
