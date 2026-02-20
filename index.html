@@ -307,7 +307,7 @@
         // Semana selector — futuras deshabilitadas
         const lunes = getLunesActual();
         document.getElementById('semanaSelector').innerHTML = semanas.map(s => {
-            const esFutura = s.inicio.getTime() > lunes.getTime();
+            const esFutura = s.inicio.getTime() >= lunes.getTime();
             return `<option value="${s.id}" ${esFutura ? 'disabled' : ''}>
                 ${s.label} (${s.inicio.getDate()}/${s.inicio.getMonth()+1})${esFutura ? ' 🔒' : ''}
             </option>`;
@@ -315,7 +315,7 @@
 
         // Default: semana actual o la última pasada
         const sel = document.getElementById('semanaSelector');
-        const pasadas = semanas.filter(s => s.inicio.getTime() <= lunes.getTime());
+        const pasadas = semanas.filter(s => s.inicio.getTime() < lunes.getTime());
         if (pasadas.length) sel.value = pasadas[pasadas.length - 1].id;
     }
 
@@ -353,7 +353,7 @@
 
         // ✅ Bloquear botón si semana futura
         const semObj   = semanas.find(s => s.id === semId);
-        const esFutura = semObj && semObj.inicio.getTime() > getLunesActual().getTime();
+        const esFutura = semObj && semObj.inicio.getTime() >= getLunesActual().getTime();
         document.getElementById('btnGuardar').disabled = !!esFutura;
     }
 
@@ -367,7 +367,7 @@
         if (fallos > meta) fallos = meta;
         if (fallos < 0)    fallos = 0;
         const semObj   = semanas.find(s => s.id === semId);
-        if (semObj && semObj.inicio.getTime() > getLunesActual().getTime()) {
+        if (semObj && semObj.inicio.getTime() >= getLunesActual().getTime()) {
             alert('No puedes reportar en semanas futuras.');
             return;
         }
