@@ -22,7 +22,7 @@
 <body class="p-4 md:p-8">
 
     <div id="loginScreen" class="max-w-md mx-auto mt-16 text-center">
-        <h1 class="text-5xl font-sport text-emerald-400 mb-2 italic text-glow">UV RUNNING</h1>
+        <h1 class="text-5xl font-sport text-emerald-400 mb-2 italic">UV RUNNING</h1>
         <p class="text-slate-500 text-[10px] tracking-[0.5em] uppercase mb-8">Management System</p>
         <div class="glass p-6">
             <div id="userPicker" class="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto pr-2"></div>
@@ -90,16 +90,16 @@
     </div>
 
     <script>
-        // Key limpia sin espacios ni saltos de línea para evitar Invalid API Key
-        const SUPABASE_URL = 'https://yibllgoulqowzewyusdh.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_dYy4Q9ZjPa-015MFbmpNvg_Z_1lSwa6a8b16e4564c70d4f3b0656a9926861218868612';
+        // ✅ FIX 1: API Key correcta (JWT anon public)
+        const SUPABASE_URL = 'https://yibllgoulqowzewyusdh.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpYmxsZ291bHFvd3pld3l1c2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzODAxODksImV4cCI6MjA4Njk1NjE4OX0.JcDzcK_xDIBaXI_sZQGGvEl9-2x4BeuDMZQRV2DJWUs';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const participantes = { "Mati Adauy": 7, "Pablo Torné": 6, "Joaquín Leonart": 5, "Sami Arteaga": 5, "Pedro De la Barra": 5, "Seba Ábalos": 5, "Tomás Balbontín": 4, "Roque Santa Cruz": 4, "Rodrigo Ábalos": 4, "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4, "Seba Domeyko": 3, "Lucas Perez": 3, "Martín González": 3, "Martín Muñoz": 3, "Ignacio Eyzaguirre": 3, "Pablo Bas": 3, "Nacho Achondo": 3, "Tatan Ruiza": 3, "Toto Labán": 3 };
-        
+
         const semanas = [];
         let d = new Date(2026, 0, 12);
-        for(let i=0; i<9; i++) {
+        for (let i = 0; i < 9; i++) {
             let s = new Date(d);
             semanas.push({ id: `sem-${s.getDate()}-${s.getMonth()+1}`, label: `S${i+1}`, inicio: s });
             d.setDate(d.getDate() + 7);
@@ -118,17 +118,20 @@
 
         function init() {
             actualizarTimeline();
+
             const picker = document.getElementById('userPicker');
             picker.innerHTML = Object.keys(participantes).sort().map(n => `
                 <button onclick="login('${n}')" class="w-full text-left p-4 glass hover:bg-emerald-500/10 rounded-xl font-bold text-sm mb-2 transition flex justify-between items-center group">
                     ${n} <i class="fa-solid fa-chevron-right text-emerald-500 opacity-0 group-hover:opacity-100 transition"></i>
                 </button>
             `).join('');
-            document.getElementById('semanaSelector').innerHTML = semanas.map(s => `<option value="${s.id}">${s.label} (${s.getDateString(s.inicio)})</option>`).join('');
-        }
 
-        // Helper para fechas
-        Date.prototype.getDateString = function(d) { return `${d.getDate()}/${d.getMonth()+1}`; };
+            // ✅ FIX 2: Selector de semanas corregido (sin usar getDateString en objeto no-Date)
+            document.getElementById('semanaSelector').innerHTML = semanas.map(s => {
+                const d = s.inicio;
+                return `<option value="${s.id}">${s.label} (${d.getDate()}/${d.getMonth()+1})</option>`;
+            }).join('');
+        }
 
         async function login(nombre) {
             currentUser = nombre;
@@ -141,8 +144,17 @@
 
         async function cargarReporteSemanal() {
             const semId = document.getElementById('semanaSelector').value;
-            const { data } = await client.from('registros_asado').select('deuda').eq('nombre', currentUser).eq('semana_id', semId).maybeSingle();
-            document.getElementById('inputFallos').value = data ? Math.round((data.deuda * participantes[currentUser]) / 30) : 0;
+            const { data, error } = await client
+                .from('registros_asado')
+                .select('deuda')
+                .eq('nombre', currentUser)
+                .eq('semana_id', semId)
+                .maybeSingle();
+
+            if (error) console.error('Error cargando reporte:', error.message);
+            document.getElementById('inputFallos').value = data
+                ? Math.round((data.deuda * participantes[currentUser]) / 30)
+                : 0;
         }
 
         async function enviarReporte() {
@@ -154,42 +166,47 @@
             btn.innerText = "ESPERA...";
             btn.disabled = true;
 
-            const { error } = await client.from('registros_asado').upsert({ 
-                nombre: currentUser, 
-                semana_id: semId, 
-                deuda: deuda 
+            const { error } = await client.from('registros_asado').upsert({
+                nombre: currentUser,
+                semana_id: semId,
+                deuda: deuda
             }, { onConflict: 'nombre,semana_id' });
 
             if (error) {
-                alert("Error: " + error.message);
-                btn.innerText = "GUARDAR";
-                btn.disabled = false;
+                alert("Error al guardar: " + error.message);
+                console.error(error);
             } else {
-                setTimeout(async () => {
-                    await cargarDatosGlobales();
-                    btn.innerText = "GUARDAR";
-                    btn.disabled = false;
-                }, 500);
+                await cargarDatosGlobales();
             }
+
+            btn.innerText = "GUARDAR";
+            btn.disabled = false;
         }
 
         async function cargarDatosGlobales() {
-            const { data } = await client.from('registros_asado').select('*');
+            const { data, error } = await client.from('registros_asado').select('*');
+
+            if (error) {
+                console.error('Error cargando datos globales:', error.message);
+                return;
+            }
+
             const hoy = new Date();
             const lunesActual = new Date();
             lunesActual.setDate(hoy.getDate() - (hoy.getDay() || 7) + 1);
-            lunesActual.setHours(0,0,0,0);
+            lunesActual.setHours(0, 0, 0, 0);
 
             let totales = {}, globalPozo = 0, mapa = {};
             data?.forEach(r => {
                 totales[r.nombre] = (totales[r.nombre] || 0) + r.deuda;
                 globalPozo += r.deuda;
-                if(!mapa[r.nombre]) mapa[r.nombre] = {};
+                if (!mapa[r.nombre]) mapa[r.nombre] = {};
                 mapa[r.nombre][r.semana_id] = true;
             });
 
             document.getElementById('totalPozo').innerText = `$${globalPozo.toFixed(2)}`;
-            const ranking = Object.keys(participantes).sort((a,b) => (totales[b]||0) - (totales[a]||0));
+
+            const ranking = Object.keys(participantes).sort((a, b) => (totales[b] || 0) - (totales[a] || 0));
 
             document.getElementById('rankingList').innerHTML = ranking.map((n, idx) => {
                 const dots = semanas.map(s => {
@@ -198,13 +215,13 @@
                     let color = "dot-futuro";
                     if (ok) color = "dot-ok";
                     else if (esPasada) color = "dot-debe";
-                    return `<div class="week-dot ${color}"></div>`;
+                    return `<div class="week-dot ${color}" title="${s.label}"></div>`;
                 }).join('');
 
                 return `
                     <div class="flex items-center justify-between p-4 glass bg-slate-800/30">
                         <div class="flex items-center gap-4 min-w-[140px]">
-                            <span class="text-[10px] font-black text-slate-600">${idx+1}</span>
+                            <span class="text-[10px] font-black text-slate-600">${idx + 1}</span>
                             <span class="text-xs font-bold ${n === currentUser ? 'text-emerald-400' : 'text-slate-300'}">${n}</span>
                         </div>
                         <div class="flex gap-2 mx-4 overflow-x-hidden">
@@ -214,6 +231,7 @@
                     </div>`;
             }).join('');
         }
+
         init();
     </script>
 </body>
