@@ -176,7 +176,7 @@
                     <div class="glass" style="padding:20px; border-top:3px solid #3b82f6;">
                         <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:800; color:var(--text-muted); margin-bottom:8px;">
                             <span>12 ENE</span>
-                            <span style="color:#3b82f6;">13 MAR 🍖</span>
+                            <span style="color:#3b82f6; font-size:1.1em;">13 MAR 🍖</span>
                         </div>
                         <div style="height:10px; background:#e2e8f0; border-radius:99px; overflow:hidden; padding:1px;">
                             <div id="progressBar" class="progress-glow" style="height:100%; border-radius:99px; background:linear-gradient(90deg,#3b82f6,#10b981); width:0%; transition:width 1s;"></div>
@@ -187,6 +187,11 @@
                     <div class="glass" style="padding:28px; text-align:center; border-bottom:4px solid #10b981;">
                         <p style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.15em; color:var(--text-muted);">Pozo Total Acumulado</p>
                         <div id="totalPozo" class="font-sport" style="font-size:3rem; color:#059669; margin-top:8px; letter-spacing:-0.03em;">$0.00</div>
+                        <div id="pajeroBox" style="margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0; display:none;">
+                            <p style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:#ef4444;">🏆 Mayor aportante</p>
+                            <p id="pajeroNombre" style="font-size:1rem; font-weight:900; color:#0f172a; margin:4px 0 2px;">—</p>
+                            <p style="font-size:11px; color:#ef4444; font-weight:700;">¡Eres un pajero! 🤣</p>
+                        </div>
                     </div>
 
                     <!-- Form -->
@@ -241,7 +246,7 @@
         "Mati Adauy": 7, "Pablo Torné": 6, "Joaquín Leonart": 5,
         "Sami Arteaga": 5, "Pedro De la Barra": 5, "Seba Ábalos": 5,
         "Tomás Balbontín": 4, "Roque Santa Cruz": 4, "Rodrigo Ábalos": 4,
-        "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4,
+        "León Lehman": 4, "Eugenio Cox": 4, "Feña Covarrubias": 4, "JT Ábalos": 4,
         "Seba Domeyko": 3, "Lucas Perez": 3, "Martín González": 3,
         "Martín Muñoz": 3, "Ignacio Eyzaguirre": 3, "Pablo Bas": 3,
         "Nacho Achondo": 3, "Tatán Ruiz": 3, "Toto Labán": 3
@@ -304,19 +309,19 @@
                 </button>
             `).join('');
 
-        // Semana selector — futuras deshabilitadas
+        // Semana selector — bloqueadas: en curso y futuras (solo se reportan semanas ya terminadas)
         const lunes = getLunesActual();
         document.getElementById('semanaSelector').innerHTML = semanas.map(s => {
-            const esFutura = s.inicio.getTime() >= lunes.getTime();
-            return `<option value="${s.id}" ${esFutura ? 'disabled' : ''}>
-                ${s.label} (${s.inicio.getDate()}/${s.inicio.getMonth()+1})${esFutura ? ' 🔒' : ''}
+            const bloqueada = s.inicio.getTime() >= lunes.getTime();
+            return `<option value="${s.id}" ${bloqueada ? 'disabled' : ''}>
+                ${s.label} (${s.inicio.getDate()}/${s.inicio.getMonth()+1})${bloqueada ? ' 🔒' : ''}
             </option>`;
         }).join('');
 
-        // Default: semana actual o la última pasada
+        // Default: última semana ya terminada
         const sel = document.getElementById('semanaSelector');
-        const pasadas = semanas.filter(s => s.inicio.getTime() < lunes.getTime());
-        if (pasadas.length) sel.value = pasadas[pasadas.length - 1].id;
+        const terminadas = semanas.filter(s => s.inicio.getTime() < lunes.getTime());
+        if (terminadas.length) sel.value = terminadas[terminadas.length - 1].id;
     }
 
     async function login(nombre) {
@@ -351,10 +356,10 @@
         document.getElementById('inputFallos').value = fallos;
         actualizarMultaPreview();
 
-        // ✅ Bloquear botón si semana futura
-        const semObj   = semanas.find(s => s.id === semId);
-        const esFutura = semObj && semObj.inicio.getTime() >= getLunesActual().getTime();
-        document.getElementById('btnGuardar').disabled = !!esFutura;
+        // Bloquear botón si semana en curso o futura
+        const semObj    = semanas.find(s => s.id === semId);
+        const bloqueada = semObj && semObj.inicio.getTime() >= getLunesActual().getTime();
+        document.getElementById('btnGuardar').disabled = !!bloqueada;
     }
 
     async function enviarReporte() {
@@ -368,7 +373,7 @@
         if (fallos < 0)    fallos = 0;
         const semObj   = semanas.find(s => s.id === semId);
         if (semObj && semObj.inicio.getTime() >= getLunesActual().getTime()) {
-            alert('No puedes reportar en semanas futuras.');
+            alert('Solo puedes reportar semanas ya terminadas.');
             return;
         }
 
@@ -401,16 +406,24 @@
         });
 
         document.getElementById('totalPozo').innerText = `$${globalPozo.toFixed(2)}`;
+
+        // Pajero: el que más ha aportado
+        const pajero = Object.keys(totales).sort((a,b) => totales[b] - totales[a])[0];
+        if (pajero && totales[pajero] > 0) {
+            document.getElementById('pajeroNombre').innerText = pajero;
+            document.getElementById('pajeroBox').style.display = 'block';
+        } else {
+            document.getElementById('pajeroBox').style.display = 'none';
+        }
         const ranking = Object.keys(participantes).sort((a, b) => (totales[b]||0) - (totales[a]||0));
 
         document.getElementById('rankingList').innerHTML = ranking.map((n, idx) => {
             const dots = semanas.map(s => {
                 const ok       = mapa[n]?.[s.id];
                 const esPasada = s.inicio.getTime() < lunes.getTime();
-                const esActual = s.inicio.getTime() === lunes.getTime();
                 let cls = 'dot-futuro';
                 if (ok) cls = 'dot-ok';
-                else if (esPasada || esActual) cls = 'dot-debe';
+                else if (esPasada) cls = 'dot-debe';
                 return `<div class="week-dot ${cls}" title="${s.label}"></div>`;
             }).join('');
 
