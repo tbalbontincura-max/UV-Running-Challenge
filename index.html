@@ -176,7 +176,7 @@
                     <div class="glass" style="padding:20px; border-top:3px solid #3b82f6;">
                         <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:800; color:var(--text-muted); margin-bottom:8px;">
                             <span>12 ENE</span>
-                            <span style="color:#3b82f6; font-size:1.1em;">13 MAR 🍖</span>
+                            <span style="color:#3b82f6; font-size:2em;">13 MAR 🍖</span>
                         </div>
                         <div style="height:10px; background:#e2e8f0; border-radius:99px; overflow:hidden; padding:1px;">
                             <div id="progressBar" class="progress-glow" style="height:100%; border-radius:99px; background:linear-gradient(90deg,#3b82f6,#10b981); width:0%; transition:width 1s;"></div>
@@ -228,7 +228,15 @@
                             <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-futuro"></div>Futuro</span>
                         </div>
                     </div>
-                    <div id="rankingList" style="max-height:580px; overflow-y:auto; padding-right:4px;"></div>
+                    <div id="rankingList" style="max-height:580px; overflow-y:auto; padding-right:4px;">
+                        <!-- Header semanas -->
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:0 16px 8px; border-bottom:1px solid #e2e8f0; margin-bottom:8px;">
+                            <div style="min-width:145px;"></div>
+                            <div id="semanasHeader" style="display:flex; gap:5px; flex:1; margin:0 10px; overflow:hidden;"></div>
+                            <div style="width:65px;"></div>
+                        </div>
+                        <div id="rankingRows"></div>
+                    </div>
                 </div>
 
             </div>
@@ -407,6 +415,11 @@
 
         document.getElementById('totalPozo').innerText = `$${globalPozo.toFixed(2)}`;
 
+        // Header S1–S9
+        document.getElementById('semanasHeader').innerHTML = semanas.map(s =>
+            `<div style="width:12px; font-size:7px; font-weight:900; color:#94a3b8; text-align:center; flex-shrink:0;">${s.label}</div>`
+        ).join('');
+
         // Pajero: el que más ha aportado
         const pajero = Object.keys(totales).sort((a,b) => totales[b] - totales[a])[0];
         if (pajero && totales[pajero] > 0) {
@@ -417,7 +430,7 @@
         }
         const ranking = Object.keys(participantes).sort((a, b) => (totales[b]||0) - (totales[a]||0));
 
-        document.getElementById('rankingList').innerHTML = ranking.map((n, idx) => {
+        document.getElementById('rankingRows').innerHTML = ranking.map((n, idx) => {
             const dots = semanas.map(s => {
                 const ok       = mapa[n]?.[s.id];
                 const esPasada = s.inicio.getTime() < lunes.getTime();
