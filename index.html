@@ -141,10 +141,8 @@
         .main-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
         @media (max-width: 768px) {
             .main-grid { grid-template-columns: 1fr; }
-            .rank-row { flex-wrap: wrap; row-gap: 6px; }
-            .rank-dots-col { order: 3; width: 100%; margin: 0 !important; }
-            .hide-mobile { display: none !important; }
-            .week-dot { width: 10px; height: 10px; }
+            #rankingList { overflow-x: auto; }
+            #rankingRows, #rankingList > div:first-child { min-width: 560px; }
         }
     </style>
 </head>
