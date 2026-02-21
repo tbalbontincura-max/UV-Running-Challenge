@@ -64,9 +64,10 @@
         }
 
         .week-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
-        .dot-ok    { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
-        .dot-debe  { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
-        .dot-futuro{ background: #cbd5e1; }
+        .dot-ok     { background: #10b981; box-shadow: 0 0 8px rgba(16,185,129,0.5); }
+        .dot-fallo  { background: #f59e0b; box-shadow: 0 0 8px rgba(245,158,11,0.5); }
+        .dot-debe   { background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+        .dot-futuro { background: #cbd5e1; }
 
         .progress-glow { box-shadow: 0 0 15px rgba(16,185,129,0.3); }
 
@@ -232,8 +233,9 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
                         <h3 class="font-sport" style="font-size:0.75rem; color:var(--text-muted);">Estado de Reportes</h3>
                         <div style="display:flex; gap:14px; font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); flex-wrap:wrap;">
-                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-ok"></div>Al día</span>
-                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-debe"></div>Sin reporte</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-ok"></div>OK</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-fallo"></div>Falló</span>
+                            <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-debe"></div>Sin registro</span>
                             <span style="display:flex; align-items:center; gap:5px;"><div class="week-dot dot-futuro"></div>Futuro</span>
                         </div>
                     </div>
@@ -361,7 +363,7 @@
     // ✅ Preview de multa + clamp de fallos
     function actualizarMultaPreview() {
         const meta  = participantes[currentUser] || 1;
-        let fallos  = parseInt(document.getElementById('inputFallos').value) || 0;
+        let fallos  = parseFloat(document.getElementById('inputFallos').value) || 0;
         if (fallos > meta) { fallos = meta; document.getElementById('inputFallos').value = meta; }
         if (fallos < 0)    { fallos = 0;    document.getElementById('inputFallos').value = 0; }
         document.getElementById('multaPreview').innerText = `$${((30 / meta) * fallos).toFixed(2)}`;
@@ -385,7 +387,7 @@
         const btn    = document.getElementById('btnGuardar');
         const semId  = document.getElementById('semanaSelector').value;
         const meta   = participantes[currentUser] || 1;
-        let fallos   = parseInt(document.getElementById('inputFallos').value) || 0;
+        let fallos   = parseFloat(document.getElementById('inputFallos').value) || 0;
 
         // ✅ Clamp + validación semana futura
         if (fallos > meta) fallos = meta;
@@ -449,11 +451,14 @@
 
         document.getElementById('rankingRows').innerHTML = ranking.map((n, idx) => {
             const dots = semanas.map(s => {
-                const ok       = mapa[n]?.[s.id];
+                const registro = data?.find(r => r.nombre === n && r.semana_id === s.id);
                 const esPasada = s.inicio.getTime() < lunes.getTime();
                 let cls = 'dot-futuro';
-                if (ok) cls = 'dot-ok';
-                else if (esPasada) cls = 'dot-debe';
+                if (registro) {
+                    cls = registro.deuda === 0 ? 'dot-ok' : 'dot-fallo';
+                } else if (esPasada) {
+                    cls = 'dot-debe';
+                }
                 return `<div class="week-dot ${cls}" title="${s.label}"></div>`;
             }).join('');
 
