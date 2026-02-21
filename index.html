@@ -29,7 +29,6 @@
             color: var(--text);
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
         .font-sport {
@@ -185,7 +184,11 @@
         .dot-futuro { background: #cbd5e1; }
 
         /* Ranking table — scrollable on mobile */
-        .ranking-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .ranking-scroll { 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+            overflow-y: visible;
+        }
         .ranking-table  { min-width: 480px; width: 100%; }
 
         .ranking-col-header {
