@@ -216,7 +216,7 @@
                             <label style="font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:var(--text-muted); display:block; margin-bottom:6px;">
                                 Fallos <span id="metaLabel" style="color:#10b981;"></span>
                             </label>
-                            <input type="number" id="inputFallos" value="0" min="0" style="font-size:1.8rem; font-weight:900; text-align:center;">
+                            <input type="number" id="inputFallos" value="0" min="0" step="0.5" style="font-size:1.8rem; font-weight:900; text-align:center;">
                         </div>
 
                         <p style="font-size:11px; color:var(--text-muted); text-align:center; margin-bottom:12px;">
@@ -364,6 +364,9 @@
         let fallos  = parseInt(document.getElementById('inputFallos').value) || 0;
         if (fallos > meta) { fallos = meta; document.getElementById('inputFallos').value = meta; }
         if (fallos < 0)    { fallos = 0;    document.getElementById('inputFallos').value = 0; }
+        // Redondear a múltiplos de 0.5
+        fallos = Math.round(fallos * 2) / 2;
+        document.getElementById('inputFallos').value = fallos;
         document.getElementById('multaPreview').innerText = `$${((30 / meta) * fallos).toFixed(2)}`;
     }
 
@@ -371,7 +374,7 @@
         const semId = document.getElementById('semanaSelector').value;
         const { data } = await client.from('registros_asado').select('deuda').eq('nombre', currentUser).eq('semana_id', semId).maybeSingle();
         const meta   = participantes[currentUser] || 1;
-        const fallos = data ? Math.round((data.deuda * meta) / 30) : 0;
+        const fallos = data ? Math.round((data.deuda * meta) / 30 * 2) / 2 : 0;
         document.getElementById('inputFallos').value = fallos;
         actualizarMultaPreview();
 
@@ -422,7 +425,7 @@
             globalPozo += r.deuda;
             // calcular fallos totales a partir de deuda y meta
             const meta = participantes[r.nombre] || 1;
-            const fallos = Math.round((r.deuda * meta) / 30);
+            const fallos = Math.round((r.deuda * meta) / 30 * 2) / 2;
             fallosTotales[r.nombre] = (fallosTotales[r.nombre] || 0) + fallos;
             if (!mapa[r.nombre]) mapa[r.nombre] = {};
             mapa[r.nombre][r.semana_id] = true;
